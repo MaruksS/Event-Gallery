@@ -1,5 +1,6 @@
 package com.s_maruks.tutinava.eventgallery;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +14,8 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+
+import java.util.Arrays;
 
 import static android.R.attr.value;
 
@@ -61,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
+                    LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("user_events"));
                     Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
                     //new_activity.putExtra("key", value);
                     LoginActivity.this.startActivity(new_activity);
