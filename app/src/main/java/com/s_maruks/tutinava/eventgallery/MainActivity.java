@@ -18,10 +18,13 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 import static android.R.attr.name;
+import static android.support.v7.widget.AppCompatDrawableManager.get;
 import static android.view.View.Y;
 
 public class MainActivity extends AppCompatActivity {
-    JSONObject events;
+    JSONObject event;
+    JSONObject object;
+    JSONArray events;
     TextView tw;
     ImageView iw;
     String name="nothing";
@@ -34,25 +37,31 @@ public class MainActivity extends AppCompatActivity {
 
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
-                "/499224723762695",
-                // "/357357958049311",
+                "/me/events",
                 null,
                 HttpMethod.GET,
                 new GraphRequest.Callback() {
                     public void onCompleted(GraphResponse response) {
-                        events= response.getJSONObject();
-                        get();
-                    }
-                }
-        ).executeAsync();
+                        object = response.getJSONObject();
+                        try {
+                            events=object.getJSONArray("data");
+                            for (int i = 0; i< events.length();i++) {
+                                try {
+                                    event = events.getJSONObject(i);
+                                    String name = event.getString("name");
+                                    tw.setText(name);
+                                } catch (Exception e) {
 
+                                }
+                            }
+                        }
+                        catch (Exception e){
+
+                        }
+                    }
+                }).executeAsync();
     }
-    public void get(){
-            try {
-                name= events.getString("name");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+    public void setText(String name){
         tw.setText(name);
     }
 }
