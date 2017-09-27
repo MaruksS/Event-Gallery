@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "244494251095",
+    "firebase_url": "https://event-gallery-c8aff.firebaseio.com",
+    "project_id": "event-gallery-c8aff",
+    "storage_bucket": "event-gallery-c8aff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244494251095:android:ef9e7eaba2e9f1b1",
+        "android_client_info": {
+          "package_name": "com.s_maruks.tutinava.eventgallery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244494251095-tdfg3s1c18jndtbe989j37f5ivdko2c5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.s_maruks.tutinava.eventgallery",
+            "certificate_hash": "beb589c988f6805eff33114369c73f3218748a71"
+          }
+        },
+        {
+          "client_id": "244494251095-cv2e9jm0dlla9eer2iv6j1tsif22e01h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzPZi8qRNNIVeVzvolO_Gpv-lwF4IZ6sg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244494251095-cv2e9jm0dlla9eer2iv6j1tsif22e01h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
