@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,21 +22,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-
-import static android.R.attr.name;
-import static android.support.v7.widget.AppCompatDrawableManager.get;
-import static android.view.View.Y;
 
 public class MainActivity extends AppCompatActivity {
+
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private FirebaseAuth mAuth;
+
     JSONObject event;
     JSONObject object;
     JSONArray events;
+
     TextView tw;
     ImageView iw;
-    String name="nothing";
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         tw = (TextView) findViewById(R.id.tw_text);
         iw = (ImageView) findViewById(R.id.iw_image);
         mAuth = FirebaseAuth.getInstance();
-
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
                 "/me/events",
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         catch (Exception e){
-
                         }
                     }
                 }).executeAsync();
@@ -75,17 +73,32 @@ public class MainActivity extends AppCompatActivity {
                 if (user != null) {
 
                 } else {
-                    Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
-                    //new_activity.putExtra("key", value);
-                    MainActivity.this.startActivity(new_activity);
-                    finish();
+                    open_login_screen();
                 }
 
             }
         };
     }
-    public void setText(String name){
-        tw.setText(name);
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.Profile:
+                open_profile();
+                return true;
+            case R.id.LogOut:
+                signOut();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -99,5 +112,27 @@ public class MainActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+    }
+
+    private void setText(String name){
+        tw.setText(name);
+    }
+
+    private void open_login_screen(){
+        Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(new_activity);
+        finish();
+    }
+    private void open_profile(){
+        Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
+        startActivity(new_activity);
+    }
+
+    private void signOut() {
+        LoginManager.getInstance().logOut();
+        FirebaseAuth.getInstance().signOut();
     }
 }

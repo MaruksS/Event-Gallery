@@ -1,6 +1,5 @@
 package com.s_maruks.tutinava.eventgallery;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -8,12 +7,10 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
-import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -31,32 +28,15 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 
-import static android.R.attr.value;
-
-
-/**
- * A login screen that offers login via email/password.
- */
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
-    private static final String TAG = "FacebookLogin";
-    LoginButton loginButton;
-    CallbackManager callbackManager;
-    private FirebaseAuth mAuth;
+    
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private void handleFacebookAccessToken(AccessToken token) {
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            FirebaseUser user = mAuth.getCurrentUser();
-                        } else {
-                            Log.w("message", "signInWithCredential:failure", task.getException());
-                        }
-                    }
-                });
-    }
+    private static final String TAG = "FacebookLogin";
+    private final int password_length = 6;
+    private FirebaseAuth mAuth;
+    CallbackManager callbackManager;
+
+    LoginButton loginButton;
     EditText email_input;
     EditText password_input;
 
@@ -75,17 +55,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.btn_create).setOnClickListener(this);
         findViewById(R.id.btn_login).setOnClickListener(this);
 
-
         try{
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("user_events"));
                     handleFacebookAccessToken(loginResult.getAccessToken());
-                    Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
-                    //new_activity.putExtra("key", value);
-                    LoginActivity.this.startActivity(new_activity);
-                    finish();
+                    open_main_activity();
                 }
 
                 @Override
@@ -95,7 +71,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                 @Override
                 public void onError(FacebookException error) {
-
+                    Log.d(TAG,error.toString());
                 }
             });
         }
@@ -103,16 +79,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         {
 
         }
+
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
-                    //new_activity.putExtra("key", value);
-                    LoginActivity.this.startActivity(new_activity);
-                    finish();
+                    open_main_activity();
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
@@ -140,6 +114,35 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_create :
+                createAccount(email_input.getText().toString(), password_input.getText().toString());
+            case R.id.btn_login:
+                signIn(email_input.getText().toString(), password_input.getText().toString());
+        }
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                        } else {
+                            Log.w("message", "signInWithCredential:failure", task.getException());
+                        }
+                    }
+                });
+    }
+
     private void createAccount(String email, String password) {
         Log.d(TAG, "createAccount:" + email);
         if (!validateForm()) {
@@ -154,10 +157,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
-                            //new_activity.putExtra("key", value);
-                            LoginActivity.this.startActivity(new_activity);
+                            open_main_activity();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -183,31 +183,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
-                            //new_activity.putExtra("key", value);
-                            LoginActivity.this.startActivity(new_activity);
+                            open_main_activity();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
-
-                        /* [START_EXCLUDE]
                         if (!task.isSuccessful()) {
-                            mStatusTextView.setText(R.string.auth_failed);
+                            Log.d(TAG,"Unsucsessful");
                         }
-                        hideProgressDialog();
-                        [END_EXCLUDE]*/
+
                     }
                 });
-        // [END sign_in_with_email]
-    }
-
-    private void signOut() {
-        mAuth.signOut();
-        LoginManager.getInstance().logOut();
-        FirebaseAuth.getInstance().signOut();
     }
 
     private boolean validateForm() {
@@ -217,7 +205,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (TextUtils.isEmpty(email)) {
             email_input.setError("Required.");
             valid = false;
-        } else {
+        }else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+            email_input.setError("Email is not valid.");
+        }
+        else {
             email_input.setError(null);
         }
 
@@ -225,21 +216,27 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (TextUtils.isEmpty(password)) {
             password_input.setError("Required.");
             valid = false;
-        } else {
+        }
+        else if(password.length()<password_length){
+            password_input.setError("Password must be at least "+password_length+" characters.");
+        }
+        else {
             password_input.setError(null);
         }
 
         return valid;
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.btn_create :
-                createAccount(email_input.getText().toString(), password_input.getText().toString());
-            case R.id.btn_login:
-                signIn(email_input.getText().toString(), password_input.getText().toString());
-        }
+    private void open_main_activity(){
+        Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
+        LoginActivity.this.startActivity(new_activity);
+        finish();
+    }
+
+    private void signOut() {
+        //mAuth.signOut();
+        LoginManager.getInstance().logOut();
+        FirebaseAuth.getInstance().signOut();
     }
 
 }
