@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "244494251095-8mmelbrnmu6t5bmi96oelmkr45csql1k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.s_maruks.tutinava.eventgallery",
+            "certificate_hash": "775e990b590a3f08e0da75c8347945c48c056b2f"
+          }
+        },
+        {
           "client_id": "244494251095-tdfg3s1c18jndtbe989j37f5ivdko2c5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

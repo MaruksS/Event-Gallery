@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,7 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
@@ -42,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         tw = (TextView) findViewById(R.id.tw_text);
         iw = (ImageView) findViewById(R.id.iw_image);
         mAuth = FirebaseAuth.getInstance();
+
+        findViewById(R.id.btn_create).setOnClickListener(this);
+
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
                 "/me/events",
@@ -130,9 +134,20 @@ public class MainActivity extends AppCompatActivity {
         Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
         startActivity(new_activity);
     }
+    private void create_event(){
+        Intent new_activity = new Intent(MainActivity.this, CreateEvent.class);
+        startActivity(new_activity);
+    }
 
     private void signOut() {
         LoginManager.getInstance().logOut();
         FirebaseAuth.getInstance().signOut();
+    }
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_create :
+                create_event();
+        }
     }
 }

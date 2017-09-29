@@ -18,6 +18,7 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -48,6 +49,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         Log.d(TAG,user.toString());
     }
 
+
     private void link_account(String email, String password){
         credential = EmailAuthProvider.getCredential(email, password);
         mAuth.getCurrentUser().linkWithCredential(credential)
@@ -55,11 +57,11 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (!task.isSuccessful()) {
-                            FirebaseUser prevUser = currentUser;
-                            //currentUser = auth.signInWithCredential(credential).await().getUser();
-                        } else {
                             Log.w(TAG, "linkWithCredential:failure", task.getException());
                             Toast.makeText(ProfileActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ProfileActivity.this, "Authentication successful.",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
