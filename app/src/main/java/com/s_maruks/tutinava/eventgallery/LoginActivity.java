@@ -50,6 +50,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     String user_id;
     String name;
+    String email;
     JSONObject object;
 
     LoginButton loginButton;
@@ -63,7 +64,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        database = FirebaseDatabase.getInstance();
+
         callbackManager = CallbackManager.Factory.create();
         loginButton = (LoginButton)findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
@@ -79,8 +80,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 public void onSuccess(LoginResult loginResult) {
                     LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("user_events","email"));
                     handleFacebookAccessToken(loginResult.getAccessToken());
-                    //writeNewUser(user_id,name,"  ");
-                    open_main_activity();
                     FirebaseUser user = mAuth.getCurrentUser();
                 }
 
@@ -99,10 +98,43 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         {
 
         }
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                        new GraphRequest(
+                                AccessToken.getCurrentAccessToken(),
+                                "/me?fields=name,email",
+                                null,
+                                HttpMethod.GET,
+                                new GraphRequest.Callback() {
+                                    public void onCompleted(GraphResponse response) {
+                                        object = response.getJSONObject();
+                                        try {
+                                            name = object.getString("name");
+                                            user_id=mAuth.getCurrentUser().getUid().toString();
+                                            email = object.getString("email");
+                                            writeNewUser(user_id,name,email);
+                                            Log.d(TAG,name);
+                                            open_main_activity();
+                                        }
+                                        catch (Exception e) {
+                                        }
+                                    }
+                                }).executeAsync();
+                } else {
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+
+            }
+        };
     }
     @Override
     public void onStart() {
         super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
     }
     @Override
     public void onStop() {
@@ -161,8 +193,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
-                            writeNewUser(mAuth.getCurrentUser().toString(), email.split("@")[0],email);
-                            open_main_activity();
+                            writeNewUser(mAuth.getCurrentUser().getUid().toString(), email.split("@")[0],email);
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -248,5 +279,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         User user = new User(name, email);
 
         mDatabase.child("users").child(userId.substring(userId.indexOf("@")+1)).setValue(user);
+        open_main_activity();
     }
 }
