@@ -1,27 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.s_maruks.tutinava.eventgallery.MainActivity">
 
-    <ImageView
-        android:id="@+id/iw_image"
-        android:layout_width="wrap_content"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rw_main"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:srcCompat="@mipmap/ic_launcher"
-        tools:layout_editor_absoluteX="54dp"
-        tools:layout_editor_absoluteY="69dp" />
-
-    <TextView
-        android:id="@+id/tw_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        tools:layout_editor_absoluteY="80dp" />
+        android:scrollbars="vertical"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="0dp"></android.support.v7.widget.RecyclerView>
 
     <Button
         android:id="@+id/btn_create"
@@ -29,5 +20,9 @@
         android:layout_height="wrap_content"
         android:text="Button"
         tools:layout_editor_absoluteX="264dp"
-        tools:layout_editor_absoluteY="142dp" />
-</android.support.constraint.ConstraintLayout>
+        tools:layout_editor_absoluteY="142dp"
+        android:layout_marginTop="43dp"
+        android:layout_below="@+id/rw_main"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

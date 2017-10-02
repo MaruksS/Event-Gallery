@@ -41,7 +41,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ProfileActivity" />
-        <activity android:name=".CreateEvent"></activity>
+        <activity android:name=".CreateEvent" />
+        <activity android:name=".ViewEvent"></activity>
     </application>
 
 </manifest>

@@ -6,10 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -18,9 +16,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Random;
+public class ViewEvent extends AppCompatActivity {
 
-public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -31,10 +28,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_event);
-
-        event_name_input = (EditText) findViewById(R.id.txt_name);
-        findViewById(R.id.btn_create).setOnClickListener(this);
+        setContentView(R.layout.activity_view_event);
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -56,17 +50,26 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_create:
-                create_event();
-        }
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+
+        // Read from the database
+        user_events.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                    String key = messageSnapshot.getKey();
+                    String name = (String) messageSnapshot.child("name").getValue();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("", "Failed to read value.", error.toException());
+            }
+        });
     }
 
     @Override
@@ -78,29 +81,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
 
-    private void create_event(){
-        String event_name = event_name_input.getText().toString();
-
-        String event_id = generate_event_id();
-
-        Event event = new Event(event_name);
-        user_events.child(event_id).setValue(event);
-    }
-
-    private String generate_event_id(){
-        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        StringBuilder salt = new StringBuilder();
-        Random rnd = new Random();
-        while (salt.length() < 18) { // length of the random string.
-            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
-            salt.append(SALTCHARS.charAt(index));
-        }
-        String generated_nr = salt.toString();
-        return generated_nr;
-    }
-
     private void open_login_screen(){
-        Intent new_activity = new Intent(CreateEvent.this, LoginActivity.class);
+        Intent new_activity = new Intent(ViewEvent.this, LoginActivity.class);
         new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

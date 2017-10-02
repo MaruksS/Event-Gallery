@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,77 +14,70 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import Adapters.MainAdapter;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private MainAdapter adapter;
+    private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLinearLayoutManager;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
+    private DatabaseReference user_events;
+    String creator;
 
     JSONObject event;
     JSONObject object;
     JSONArray events;
 
-    TextView tw;
-    ImageView iw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tw = (TextView) findViewById(R.id.tw_text);
-        iw = (ImageView) findViewById(R.id.iw_image);
         mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
 
         findViewById(R.id.btn_create).setOnClickListener(this);
-
-        new GraphRequest(
-                AccessToken.getCurrentAccessToken(),
-                "/me/events",
-                null,
-                HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    public void onCompleted(GraphResponse response) {
-                        object = response.getJSONObject();
-                        try {
-                            events=object.getJSONArray("data");
-                            for (int i = 0; i< events.length();i++) {
-                                try {
-                                    event = events.getJSONObject(i);
-                                    String name = event.getString("name");
-                                    tw.setText(name);
-                                } catch (Exception e) {
-
-                                }
-                            }
-                        }
-                        catch (Exception e){
-                        }
-                    }
-                }).executeAsync();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    Log.d("user",mAuth.getCurrentUser().getUid().toString());
+                    creator = mAuth.getCurrentUser().getUid().toString();
+                    user_events= mDatabase.child("users").child(creator).child("Created events");
                 } else {
                     open_login_screen();
                 }
-
             }
         };
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.rw_main);
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
     }
 
     @Override
@@ -111,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -119,9 +115,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void setText(String name){
-        tw.setText(name);
-    }
 
     private void open_login_screen(){
         Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
@@ -138,6 +131,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void create_event(){
         Intent new_activity = new Intent(MainActivity.this, CreateEvent.class);
         startActivity(new_activity);
+    }
+    private void display_data(){
+        adapter = new MainAdapter(this, get_events());
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(adapter);
+    }
+    private List<Event> get_events(){
+        final List<Event> events = new ArrayList<>();
+
+        // Read from the database
+        user_events.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                    Event current = new Event();
+                    current.name= (String) messageSnapshot.child("name").getValue();
+                    events.add(current);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("", "Failed to read value.", error.toException());
+            }
+        });
+        return events;
     }
 
     private void signOut() {
