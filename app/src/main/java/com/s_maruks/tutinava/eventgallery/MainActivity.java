@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-
                 mRecyclerView.setLayoutManager(mLinearLayoutManager);
                 mRecyclerView.setAdapter(adapter);
             }
