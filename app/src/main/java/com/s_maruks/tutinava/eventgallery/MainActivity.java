@@ -1,6 +1,7 @@
 package com.s_maruks.tutinava.eventgallery;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,7 +37,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private MainAdapter adapter;
@@ -47,10 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private DatabaseReference mDatabase;
     private DatabaseReference user_events;
     String creator;
-
-    JSONObject event;
-    JSONObject object;
-    JSONArray events;
+    private static String selected;
 
 
     @Override
@@ -60,8 +57,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
+        mRecyclerView = (RecyclerView) findViewById(R.id.rw_main);
+        mLinearLayoutManager = new LinearLayoutManager(this);
 
         findViewById(R.id.btn_create).setOnClickListener(this);
+
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -69,15 +69,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (user != null) {
                     creator = mAuth.getCurrentUser().getUid().toString();
                     user_events= mDatabase.child("users").child(creator).child("Created events");
+                    display_data();
                 } else {
                     open_login_screen();
                 }
             }
         };
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.rw_main);
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
     }
 
     @Override
@@ -133,15 +130,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(new_activity);
     }
     private void display_data(){
-        adapter = new MainAdapter(this, get_events());
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mRecyclerView.setAdapter(adapter);
+        adapter = new MainAdapter(MainActivity.this, get_events());
+        adapter.setOnRecyclerViewItemClickListener(new MainAdapter.OnRecyclerViewItemClickListener() {
+            @Override
+            public void onItemClicked(CharSequence text) {
+                open_event(text.toString());
+            }
+        });
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+
+                mRecyclerView.setLayoutManager(mLinearLayoutManager);
+                mRecyclerView.setAdapter(adapter);
+            }
+        }, 1500);   //1.5 seconds
     }
     private List<Event> get_events(){
         final List<Event> events = new ArrayList<>();
 
-        // Read from the database
-        user_events.addValueEventListener(new ValueEventListener() {
+        user_events.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
@@ -150,7 +158,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     events.add(current);
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError error) {
                 // Failed to read value
@@ -158,6 +165,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         return events;
+    }
+
+    private void open_event(String event){
+        Intent new_activity = new Intent(MainActivity.this, ViewEvent.class);
+        new_activity.putExtra("name",event);
+        startActivity(new_activity);
     }
 
     private void signOut() {

@@ -1,6 +1,7 @@
 package com.s_maruks.tutinava.eventgallery;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -29,8 +30,13 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.common.StringUtils;
 
 import org.json.JSONArray;
@@ -44,14 +50,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private static final String TAG = "FacebookLogin";
     private final int password_length = 6;
     private DatabaseReference mDatabase;
-    FirebaseDatabase database;
     private FirebaseAuth mAuth;
+    private FirebaseDatabase database;
     CallbackManager callbackManager;
+
 
     String user_id;
     String name;
     String email;
     JSONObject object;
+
 
     LoginButton loginButton;
     EditText email_input;
@@ -63,7 +71,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
         mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        database=FirebaseDatabase.getInstance();
+        mDatabase = database.getReference();
 
         callbackManager = CallbackManager.Factory.create();
         loginButton = (LoginButton)findViewById(R.id.login_button);
@@ -80,7 +89,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 public void onSuccess(LoginResult loginResult) {
                     LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("user_events","email"));
                     handleFacebookAccessToken(loginResult.getAccessToken());
-                    FirebaseUser user = mAuth.getCurrentUser();
                 }
 
                 @Override
@@ -101,9 +109,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+                final FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                         new GraphRequest(
                                 AccessToken.getCurrentAccessToken(),
                                 "/me?fields=name,email",
@@ -118,12 +125,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                             email = object.getString("email");
                                             writeNewUser(user_id,name,email);
                                             Log.d(TAG,name);
-                                            open_main_activity();
                                         }
                                         catch (Exception e) {
                                         }
                                     }
                                 }).executeAsync();
+                    open_main_activity();
                 } else {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
@@ -270,15 +277,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void signOut() {
-        //mAuth.signOut();
+        mAuth.signOut();
         LoginManager.getInstance().logOut();
-        FirebaseAuth.getInstance().signOut();
     }
+
 
     private void writeNewUser(String userId, String name, String email) {
-        User user = new User(name, email);
-
-        mDatabase.child("users").child(userId.substring(userId.indexOf("@")+1)).setValue(user);
+        mDatabase.child("users").child(userId).child("username").setValue(name);
+        mDatabase.child("users").child(userId).child("email").setValue(email);
         open_main_activity();
     }
+
 }

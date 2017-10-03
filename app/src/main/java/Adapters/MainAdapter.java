@@ -2,32 +2,42 @@ package Adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
+
 import android.widget.TextView;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
+
 import com.s_maruks.tutinava.eventgallery.Event;
+
 import com.s_maruks.tutinava.eventgallery.R;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static android.R.attr.data;
 
 /**
  * Created by uizen on 02/10/2017.
  */
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> {
-
     private LayoutInflater inflater;
     List<Event> events = Collections.emptyList();
+
+    // Define listener member variable
+    private static OnRecyclerViewItemClickListener mListener;
+
+    // Define the listener interface
+    public interface OnRecyclerViewItemClickListener {
+        void onItemClicked(CharSequence text);
+    }
+
+    // Define the method that allows the parent activity or fragment to define the listener.
+    public void setOnRecyclerViewItemClickListener(OnRecyclerViewItemClickListener listener) {
+        this.mListener = listener;
+    }
 
     public MainAdapter(Context context, List<Event> events){
         inflater = LayoutInflater.from(context);
@@ -52,13 +62,21 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
         return events.size();
     }
 
-    public static class myViewHolder extends RecyclerView.ViewHolder{
+    public static class myViewHolder extends RecyclerView.ViewHolder {
 
         TextView event_name;
 
         public myViewHolder(View itemView) {
             super(itemView);
             event_name= (TextView) itemView.findViewById(R.id.event_name);
+            event_name.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // send the text to the listener, i.e Activity.
+                    mListener.onItemClicked(((TextView)v).getText());
+                }
+            });
+
         }
     }
 }
