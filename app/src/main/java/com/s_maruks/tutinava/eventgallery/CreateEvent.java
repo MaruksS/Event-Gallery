@@ -6,17 +6,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.Random;
 
@@ -83,8 +78,9 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
         String event_id = generate_event_id();
 
-        Event event = new Event(event_name);
-        user_events.child(event_id).setValue(event);
+        Event event = new Event(event_name,creator,event_id);
+        user_events.child(event_id).setValue(event_id);
+        mDatabase.child("events").child(event_id).setValue(event);
     }
 
     private String generate_event_id(){

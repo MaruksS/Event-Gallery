@@ -54,7 +54,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
     @Override
     public void onBindViewHolder(myViewHolder holder, int position) {
         Event current = events.get(position);
-        holder.event_name.setText(current.name);
+        holder.event_name.setText(current.Name);
     }
 
     @Override

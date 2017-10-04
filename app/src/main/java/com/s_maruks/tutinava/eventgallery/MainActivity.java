@@ -12,14 +12,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import Adapters.MainAdapter;
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,10 +23,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +36,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private DatabaseReference user_events;
+    private DatabaseReference all_events;
     String creator;
-    private static String selected;
 
 
     @Override
@@ -69,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (user != null) {
                     creator = mAuth.getCurrentUser().getUid().toString();
                     user_events= mDatabase.child("users").child(creator).child("Created events");
+                    all_events= mDatabase.child("events");
                     display_data();
                 } else {
                     open_login_screen();
@@ -111,8 +102,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
-
-
     private void open_login_screen(){
         Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
         new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -146,24 +135,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }, 1500);   //1.5 seconds
     }
     private List<Event> get_events(){
-        final List<Event> events = new ArrayList<>();
+        final List<Event> created_events = new ArrayList<>();
+        try {
+            all_events.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                        Event event = messageSnapshot.getValue(Event.class);
+                        if (event.creator_id.equals(creator)){
+                            created_events.add(event);
+                        }
 
-        user_events.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                    Event current = new Event();
-                    current.name= (String) messageSnapshot.child("name").getValue();
-                    events.add(current);
+
+                    }
                 }
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("", "Failed to read value.", error.toException());
-            }
-        });
-        return events;
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w("", "Failed to read value.", error.toException());
+                }
+
+            });
+        }
+        catch (Exception e){
+
+        }
+        return created_events;
     }
 
     private void open_event(String event){
