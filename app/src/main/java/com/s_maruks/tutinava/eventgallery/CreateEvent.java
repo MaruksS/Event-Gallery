@@ -13,6 +13,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
@@ -78,7 +80,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
         String event_id = generate_event_id();
 
-        Event event = new Event(event_name,creator,event_id);
+        List<User> participants = new ArrayList<>();
+        Event event = new Event(event_name,creator,event_id,participants);
         user_events.child(event_id).setValue(event_id);
         mDatabase.child("events").child(event_id).setValue(event);
     }

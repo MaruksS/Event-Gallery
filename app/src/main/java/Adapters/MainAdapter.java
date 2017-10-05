@@ -55,6 +55,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
     public void onBindViewHolder(myViewHolder holder, int position) {
         Event current = events.get(position);
         holder.event_name.setText(current.Name);
+        holder.event_name.setTag(current.event_id);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.
-                    mListener.onItemClicked(((TextView)v).getText());
+                    mListener.onItemClicked((CharSequence) v.getTag());
                 }
             });
 
