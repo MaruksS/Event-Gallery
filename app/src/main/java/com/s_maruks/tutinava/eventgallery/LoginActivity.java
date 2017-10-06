@@ -31,10 +31,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-
 import org.json.JSONObject;
-
 import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
@@ -47,12 +44,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseDatabase database;
     CallbackManager callbackManager;
 
-
     String user_id;
     String name;
     String email;
     JSONObject object;
-
 
     LoginButton loginButton;
     EditText email_input;

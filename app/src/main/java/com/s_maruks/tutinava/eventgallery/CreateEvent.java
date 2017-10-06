@@ -17,12 +17,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import Entities.Event;
+import Entities.User;
+
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
+    private DatabaseReference mDatabase, user_events;
+
     EditText event_name_input;
-    private DatabaseReference user_events;
     String creator;
 
     @Override
@@ -73,7 +76,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
-
 
     private void create_event(){
         String event_name = event_name_input.getText().toString();

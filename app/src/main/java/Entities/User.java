@@ -1,4 +1,4 @@
-package com.s_maruks.tutinava.eventgallery;
+package Entities;
 
 /**
  * Created by Tutinava on 29.09.2017.

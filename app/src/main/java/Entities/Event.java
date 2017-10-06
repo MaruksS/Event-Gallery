@@ -1,4 +1,4 @@
-package com.s_maruks.tutinava.eventgallery;
+package Entities;
 
 import java.util.List;
 

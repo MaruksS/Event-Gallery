@@ -14,8 +14,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 import Adapters.MainAdapter;
+import Entities.Event;
+
 import com.facebook.login.LoginManager;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -32,13 +33,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MainAdapter adapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
+
+    private DatabaseReference mDatabase, user_events, all_events;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
-    private DatabaseReference user_events;
-    private DatabaseReference all_events;
-    String creator;
 
+    String creator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,22 +102,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
-    private void open_login_screen(){
-        Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(new_activity);
-        finish();
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_create :
+                create_event();
+        }
     }
-    private void open_profile(){
-        Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
-        startActivity(new_activity);
-    }
+
     private void create_event(){
         Intent new_activity = new Intent(MainActivity.this, CreateEvent.class);
         startActivity(new_activity);
     }
+
     private void display_data(){
         adapter = new MainAdapter(MainActivity.this, get_events());
         adapter.setOnRecyclerViewItemClickListener(new MainAdapter.OnRecyclerViewItemClickListener() {
@@ -134,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, 1500);   //1.5 seconds
     }
+
     private List<Event> get_events(){
         final List<Event> created_events = new ArrayList<>();
         try {
@@ -163,9 +162,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return created_events;
     }
 
+    private void open_login_screen(){
+        Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(new_activity);
+        finish();
+    }
+
+    private void open_profile(){
+        Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
+        startActivity(new_activity);
+    }
+
     private void open_event(String event){
         Intent new_activity = new Intent(MainActivity.this, ViewEvent.class);
-        new_activity.putExtra("name",event);
+        new_activity.putExtra("event_id",event);
         startActivity(new_activity);
     }
 
@@ -173,11 +186,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LoginManager.getInstance().logOut();
         FirebaseAuth.getInstance().signOut();
     }
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.btn_create :
-                create_event();
-        }
-    }
+
 }
