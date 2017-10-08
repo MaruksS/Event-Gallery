@@ -33,10 +33,6 @@ dependencies {
     compile 'com.google.firebase:firebase-database:10.0.1'
     compile 'com.google.firebase:firebase-storage:10.0.1'
     compile 'com.firebaseui:firebase-ui-storage:0.6.0'
-    compile ("com.github.bumptech.glide:recyclerview-integration:4.2.0") {
-        // Excludes the support library because it's already included by Glide.
-        transitive = false
-    }
     testCompile 'junit:junit:4.12'
 }
 

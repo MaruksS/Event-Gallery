@@ -5,16 +5,17 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 
-import com.bumptech.glide.Glide;
-import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,8 +35,17 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
+
+import Adapters.GalleryAdapter;
+import Adapters.MainAdapter;
+import Entities.Event;
+import Entities.Photo;
+
+import static com.s_maruks.tutinava.eventgallery.R.id.event_name;
 
 public class ViewEvent extends AppCompatActivity implements View.OnClickListener {
 
@@ -43,10 +53,14 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
     private StorageReference mStorageRef, eventRef, camera_img;
     private DatabaseReference mDatabase, user_events;
 
+    private GalleryAdapter adapter;
+    private RecyclerView mRecyclerView;
+    private GridLayoutManager mGridLayoutManager;
+
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    private String user,event_id;
+    private String user,event_id, photo_id;
     private Intent intent;
 
     private final int PICK_Camera_IMAGE = 2;
@@ -62,6 +76,9 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
 
         intent=getIntent();
         event_id=intent.getStringExtra("event_id");
+
+        mRecyclerView= (RecyclerView)findViewById(R.id.rw_gallery);
+        mGridLayoutManager = new GridLayoutManager(ViewEvent.this,3);
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -80,7 +97,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    Log.d("user", mAuth.getCurrentUser().toString());
+
+                    display_photos();
                 } else {
                     open_login_screen();
                 }
@@ -147,7 +165,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
             case SELECT_FILE1:
                 if (resultCode == Activity.RESULT_OK) {
                     selectedImage = imageReturnedIntent.getData();
-                    camera_img= eventRef.child(generate_photo_id());
+                    photo_id = generate_photo_id();
+                    camera_img = eventRef.child(photo_id);
 
                     uploadTask = camera_img.putFile(selectedImage);
                     uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -157,7 +176,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                     }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
+                            Photo photo = new Photo(photo_id, event_id);
+                            mDatabase.child("events").child(event_id).child("photos").child(photo_id).setValue(photo);
                         }
                     });
                 }
@@ -168,7 +188,9 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 4;
                     imagePath = destination.getAbsolutePath();
-                    camera_img= eventRef.child(generate_photo_id());
+                    photo_id = generate_photo_id();
+                    camera_img = eventRef.child(photo_id);
+
                     try {
                         stream = new FileInputStream(imagePath);
                     } catch (FileNotFoundException e) {
@@ -182,12 +204,57 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                     }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
+                            Photo photo = new Photo(photo_id, event_id);
+                            mDatabase.child("events").child(event_id).child("photos").child(photo_id).setValue(photo);
                         }
                     });
                     break;
                 }
         }
+    }
+
+    private void display_photos(){
+        adapter = new GalleryAdapter(ViewEvent.this, get_photos());
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                adapter.setOnRecyclerViewItemClickListener(new GalleryAdapter.OnRecyclerViewItemClickListener() {
+                    @Override
+                    public void onItemClicked(CharSequence text) {
+                        Log.d("message","gg");
+                    }
+                });
+                mRecyclerView.setLayoutManager(mGridLayoutManager);
+                mRecyclerView.setAdapter(adapter);
+            }
+        }, 2500);   //1.5 seconds
+    }
+
+    private List<Photo> get_photos(){
+        final List<Photo> public_photos = new ArrayList<>();
+        DatabaseReference event_photos = mDatabase.child("events").child(event_id).child("photos");
+        try {
+            event_photos.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                        Photo photo = messageSnapshot.getValue(Photo.class);
+                        public_photos.add(photo);
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w("", "Failed to read value.", error.toException());
+                }
+
+            });
+        }
+        catch (Exception e){
+
+        }
+        return public_photos;
     }
 
     public void openCamera(){
