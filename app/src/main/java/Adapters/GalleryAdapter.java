@@ -2,6 +2,7 @@ package Adapters;
 
 import android.content.Context;
 import android.media.Image;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,11 +11,16 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.s_maruks.tutinava.eventgallery.R;
 import com.s_maruks.tutinava.eventgallery.ViewEvent;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,10 +69,11 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.GalleryV
 
         FirebaseStorage mStorage = FirebaseStorage.getInstance();
         StorageReference mStorageRef = mStorage.getReference();
-        StorageReference eventRef = mStorageRef.child("events").child(current.event_id).child(current.photo_id);
+        StorageReference photoRef = mStorageRef.child("events").child(current.event_id).child(current.photo_id);
+
         Glide.with(context)
                 .using(new FirebaseImageLoader())
-                .load(eventRef)
+                .load(photoRef)
                 .into(GalleryViewHolder.display_image);
     }
 
@@ -89,7 +96,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.GalleryV
                     mListener.onItemClicked((CharSequence) v.getTag());
                 }
             });
-
         }
     }
 }

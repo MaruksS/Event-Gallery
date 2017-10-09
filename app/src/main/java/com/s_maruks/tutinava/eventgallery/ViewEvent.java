@@ -2,6 +2,7 @@ package com.s_maruks.tutinava.eventgallery;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
@@ -15,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -23,15 +25,20 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -41,11 +48,13 @@ import java.util.List;
 import java.util.Random;
 
 import Adapters.GalleryAdapter;
-import Adapters.MainAdapter;
-import Entities.Event;
+
 import Entities.Photo;
 
-import static com.s_maruks.tutinava.eventgallery.R.id.event_name;
+import static android.R.attr.bitmap;
+import static android.media.CamcorderProfile.get;
+import static com.s_maruks.tutinava.eventgallery.R.id.imageView;
+
 
 public class ViewEvent extends AppCompatActivity implements View.OnClickListener {
 
@@ -62,6 +71,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
 
     private String user,event_id, photo_id;
     private Intent intent;
+
+    List<Photo> all_photos = new ArrayList<>();
 
     private final int PICK_Camera_IMAGE = 2;
     private final int SELECT_FILE1 = 1;
@@ -80,6 +91,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         mRecyclerView= (RecyclerView)findViewById(R.id.rw_gallery);
         mGridLayoutManager = new GridLayoutManager(ViewEvent.this,3);
 
+
+
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         user = mAuth.getCurrentUser().getUid().toString();
@@ -97,7 +110,6 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-
                     display_photos();
                 } else {
                     open_login_screen();
@@ -111,30 +123,6 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
-
-        // Read from the database
-        user_events.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
-                    String key = messageSnapshot.getKey();
-                    String name = (String) messageSnapshot.child("name").getValue();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("", "Failed to read value.", error.toException());
-            }
-        });
-        /*
-        Glide.with(this)
-                .using(new FirebaseImageLoader())
-                .load(eventRef)
-                .into(imageView);
-
-        */
     }
     @Override
     public void onStop() {
@@ -180,9 +168,8 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                             mDatabase.child("events").child(event_id).child("photos").child(photo_id).setValue(photo);
                         }
                     });
+                    break;
                 }
-
-                break;
             case PICK_Camera_IMAGE:
                 if (resultCode == RESULT_OK) {
                     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -213,6 +200,91 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // If there's a download in progress, save the reference so you can query it later
+        if (mStorageRef != null) {
+            outState.putString("reference", mStorageRef.toString());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // If there was a download in progress, get its reference and create a new StorageReference
+        final String stringRef = savedInstanceState.getString("reference");
+        if (stringRef == null) {
+            return;
+        }
+        mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
+
+        // Find all DownloadTasks under this StorageReference (in this example, there should be one)
+        List<FileDownloadTask> tasks = mStorageRef.getActiveDownloadTasks();
+        if (tasks.size() > 0) {
+            // Get the task monitoring the download
+            FileDownloadTask task = tasks.get(0);
+
+            // Add new listeners to the task using an Activity scope
+            task.addOnSuccessListener(this, new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot state) {
+                }
+            });
+        }
+    }
+
+    private void download_photos_to_memory(){
+        String photo_id =all_photos.get(0).photo_id;
+        download_photo(eventRef.child(photo_id),photo_id);
+        for (int i=0;i<all_photos.size();i++){
+            //photo_id =all_photos.get(i).photo_id;
+
+        }
+    }
+
+    private void download_photo(StorageReference photo,String photo_id) {
+
+        try {
+            final File localFile = File.createTempFile(photo_id, "jpg");
+
+            photo.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                Bitmap bmp = BitmapFactory.decodeFile(localFile.getAbsolutePath());
+                FileOutputStream outStream = null;
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File(sdCard.getAbsolutePath() + "/DCIM");
+                dir.mkdirs();
+                String fileName = String.format("%d.jpg", System.currentTimeMillis());
+                File outFile = new File(dir, fileName);
+                try {
+                    outStream = new FileOutputStream(outFile);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                    outStream.flush();
+                    outStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d("exception", exception.toString());
+            }
+        }).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                Log.d("exception", taskSnapshot.toString());
+            }
+        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void display_photos(){
         adapter = new GalleryAdapter(ViewEvent.this, get_photos());
 
@@ -227,6 +299,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                 });
                 mRecyclerView.setLayoutManager(mGridLayoutManager);
                 mRecyclerView.setAdapter(adapter);
+                download_photos_to_memory();
             }
         }, 2500);   //1.5 seconds
     }
@@ -254,6 +327,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         catch (Exception e){
 
         }
+        all_photos=public_photos;
         return public_photos;
     }
 
@@ -262,7 +336,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         destination = new File(Environment
                 .getExternalStorageDirectory(), name + ".jpg");
 
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT,
                 Uri.fromFile(destination));
         startActivityForResult(intent, PICK_Camera_IMAGE);
@@ -304,4 +378,5 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         String generated_nr = salt.toString();
         return generated_nr;
     }
+
 }
