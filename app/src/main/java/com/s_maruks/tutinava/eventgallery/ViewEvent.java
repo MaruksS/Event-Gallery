@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -237,37 +238,49 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
     }
 
     private void download_photos_to_memory(){
-        String photo_id =all_photos.get(0).photo_id;
-        download_photo(eventRef.child(photo_id),photo_id);
-        for (int i=0;i<all_photos.size();i++){
-            //photo_id =all_photos.get(i).photo_id;
 
+        for (int i=0;i<all_photos.size();i++){
+            String photo_id =all_photos.get(i).photo_id;
+            download_photo(eventRef.child(photo_id),photo_id);
         }
     }
 
-    private void download_photo(StorageReference photo,String photo_id) {
+    private void download_photo(final StorageReference photo, final String photo_id) {
 
         try {
             final File localFile = File.createTempFile(photo_id, "jpg");
-
             photo.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                 Bitmap bmp = BitmapFactory.decodeFile(localFile.getAbsolutePath());
                 FileOutputStream outStream = null;
-                File sdCard = Environment.getExternalStorageDirectory();
-                File dir = new File(sdCard.getAbsolutePath() + "/DCIM");
+                File memory = Environment.getExternalStorageDirectory();
+                File dir = new File(memory.getAbsolutePath() + "/Event-Gallery/events/"+event_id);
                 dir.mkdirs();
-                String fileName = String.format("%d.jpg", System.currentTimeMillis());
+                String fileName = photo_id+".jpg";
                 File outFile = new File(dir, fileName);
-                try {
-                    outStream = new FileOutputStream(outFile);
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                    outStream.flush();
-                    outStream.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if(outFile.exists()){
+                    Log.d("message","exists");
                 }
+                else{
+                    try {
+                        outStream = new FileOutputStream(outFile);
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                        outStream.flush();
+                        outStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    MediaScannerConnection.scanFile(ViewEvent.this, new String[] { outFile.getAbsolutePath()},
+                            null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.d("complete","scan complete");
+                                }
+                            });
+                }
+                localFile.deleteOnExit();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
