@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "244494251095-kpo7kv1vmdrqmtbpdue447g9bkj4o7o1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.s_maruks.tutinava.eventgallery",
+            "certificate_hash": "e7d9f738365c4563ad63c8422818b0186d740ada"
+          }
+        },
+        {
           "client_id": "244494251095-8mmelbrnmu6t5bmi96oelmkr45csql1k.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -37,7 +45,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCaOgFB8a-3kCec2pG_NmOV0Q82rkgMbCo"
+          "current_key": "AIzaSyCzPZi8qRNNIVeVzvolO_Gpv-lwF4IZ6sg"
         }
       ],
       "services": {

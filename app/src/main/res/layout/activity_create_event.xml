@@ -12,6 +12,15 @@
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
 
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@android:drawable/ic_menu_camera"
+            android:layout_alignBottom="@+id/btn_create"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="23dp" />
+
         <Button
             android:id="@+id/btn_create"
             android:layout_width="wrap_content"
