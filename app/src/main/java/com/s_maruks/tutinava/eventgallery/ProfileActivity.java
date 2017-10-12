@@ -17,13 +17,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class ProfileActivity extends AppCompatActivity implements View.OnClickListener {
-
-    private static final String TAG = "FacebookLogin";
+    //Firebase references
     private FirebaseAuth mAuth;
-    EditText email_input;
-    EditText password_input;
-    FirebaseUser currentUser;
-    AuthCredential credential;
+    private FirebaseUser currentUser;
+    private AuthCredential credential;
+
+    //Static variables and tags
+    private static final String TAG = "FacebookLogin";
+
+    //Visual elements
+    private EditText password_input;
+    private EditText email_input;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -30,15 +30,20 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    //Firebase references
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private DatabaseReference mDatabase;
+    private DatabaseReference user_events;
+    private DatabaseReference all_events;
+
+    //RecyclerView - related
     private MainAdapter adapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
 
-    private DatabaseReference mDatabase, user_events, all_events;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private FirebaseAuth mAuth;
-
-    String creator;
+    //Other data types
+    private String creator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,6 +138,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }, 1500);   //1.5 seconds
     }
 
+    private void signOut() {
+        LoginManager.getInstance().logOut();
+        FirebaseAuth.getInstance().signOut();
+    }
+
+    private void open_login_screen(){
+        Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        startActivity(new_activity);
+        finish();
+    }
+
+    private void open_profile(){
+        Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
+        startActivity(new_activity);
+    }
+
+    private void open_event(String event){
+        Intent new_activity = new Intent(MainActivity.this, ViewEvent.class);
+        new_activity.putExtra("event_id",event);
+        startActivity(new_activity);
+    }
+
     private List<Event> get_events(){
         final List<Event> created_events = new ArrayList<>();
         try {
@@ -160,31 +190,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
         return created_events;
-    }
-
-    private void open_login_screen(){
-        Intent new_activity = new Intent(MainActivity.this, LoginActivity.class);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        new_activity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(new_activity);
-        finish();
-    }
-
-    private void open_profile(){
-        Intent new_activity = new Intent(MainActivity.this, ProfileActivity.class);
-        startActivity(new_activity);
-    }
-
-    private void open_event(String event){
-        Intent new_activity = new Intent(MainActivity.this, ViewEvent.class);
-        new_activity.putExtra("event_id",event);
-        startActivity(new_activity);
-    }
-
-    private void signOut() {
-        LoginManager.getInstance().logOut();
-        FirebaseAuth.getInstance().signOut();
     }
 
 }

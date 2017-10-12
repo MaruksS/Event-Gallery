@@ -51,6 +51,7 @@ import java.util.Random;
 import Adapters.GalleryAdapter;
 
 import Entities.Photo;
+import Helpers.RandomStringGenerator;
 
 import static android.R.attr.bitmap;
 import static android.media.CamcorderProfile.get;
@@ -58,28 +59,39 @@ import static com.s_maruks.tutinava.eventgallery.R.id.imageView;
 
 
 public class ViewEvent extends AppCompatActivity implements View.OnClickListener {
-
+    //Firebase references
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseStorage mStorage;
-    private StorageReference mStorageRef, eventRef, camera_img;
-    private DatabaseReference mDatabase, user_events;
+    private StorageReference mStorageRef;
+    private StorageReference eventRef;
+    private StorageReference camera_img;
+    private DatabaseReference mDatabase;
+    private DatabaseReference user_events;
 
+    //Helepers
+    private static RandomStringGenerator stringGenerator;
+
+    //RecyclerView - related
     private GalleryAdapter adapter;
     private RecyclerView mRecyclerView;
     private GridLayoutManager mGridLayoutManager;
 
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-
-    private String user,event_id, photo_id;
-    private Intent intent;
-
-    List<Photo> all_photos = new ArrayList<>();
-
-    private final int PICK_Camera_IMAGE = 2;
+    //final variables
     private final int SELECT_FILE1 = 1;
-    public static String imagePath;
+    private final int PICK_Camera_IMAGE = 2;
+
+    //Other data types
+    private String user;
+    private String event_id;
+    private String photo_id;
+    private String imagePath;
+
+    private Intent intent;
     private File destination;
     private Uri selectedImage;
+    private List<Photo> all_photos = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,7 +166,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
             case SELECT_FILE1:
                 if (resultCode == Activity.RESULT_OK) {
                     selectedImage = imageReturnedIntent.getData();
-                    photo_id = generate_photo_id();
+                    photo_id = stringGenerator.getGeneratedString(18);
                     camera_img = eventRef.child(photo_id);
 
                     uploadTask = camera_img.putFile(selectedImage);
@@ -176,7 +188,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 4;
                     imagePath = destination.getAbsolutePath();
-                    photo_id = generate_photo_id();
+                    photo_id = stringGenerator.getGeneratedString(18);
                     camera_img = eventRef.child(photo_id);
 
                     try {
@@ -317,33 +329,6 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         }, 2500);   //1.5 seconds
     }
 
-    private List<Photo> get_photos(){
-        final List<Photo> public_photos = new ArrayList<>();
-        DatabaseReference event_photos = mDatabase.child("events").child(event_id).child("photos");
-        try {
-            event_photos.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                        Photo photo = messageSnapshot.getValue(Photo.class);
-                        public_photos.add(photo);
-                    }
-                }
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    // Failed to read value
-                    Log.w("", "Failed to read value.", error.toException());
-                }
-
-            });
-        }
-        catch (Exception e){
-
-        }
-        all_photos=public_photos;
-        return public_photos;
-    }
-
     public void openCamera(){
         String name = dateToString(new Date(), "yyyy-MM-dd-hh-mm-ss");
         destination = new File(Environment
@@ -373,23 +358,37 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         finish();
     }
 
+    private List<Photo> get_photos(){
+        final List<Photo> public_photos = new ArrayList<>();
+        DatabaseReference event_photos = mDatabase.child("events").child(event_id).child("photos");
+        try {
+            event_photos.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                        Photo photo = messageSnapshot.getValue(Photo.class);
+                        public_photos.add(photo);
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w("", "Failed to read value.", error.toException());
+                }
+
+            });
+        }
+        catch (Exception e){
+
+        }
+        all_photos=public_photos;
+        return public_photos;
+    }
+
     private String dateToString(Date date, String s) {
 
         DateFormat df = new SimpleDateFormat(s);
         String reportDate = df.format(date);
         return reportDate;
     }
-
-    private String generate_photo_id(){
-        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        StringBuilder salt = new StringBuilder();
-        Random rnd = new Random();
-        while (salt.length() < 18) { // length of the random string.
-            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
-            salt.append(SALTCHARS.charAt(index));
-        }
-        String generated_nr = salt.toString();
-        return generated_nr;
-    }
-
 }

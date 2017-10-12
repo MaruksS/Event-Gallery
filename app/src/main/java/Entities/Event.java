@@ -3,7 +3,7 @@ package Entities;
 import java.util.List;
 
 /**
- * Created by uizen on 01/10/2017.
+ * Created by Sergejs on 01/10/2017.
  */
 
 public class Event {

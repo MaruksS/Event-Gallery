@@ -1,7 +1,7 @@
 package Entities;
 
 /**
- * Created by Tutinava on 29.09.2017.
+ * Created by Sergejs on 29.09.2017.
  */
 
 public class User {

@@ -15,9 +15,6 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -34,24 +31,35 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONObject;
 import java.util.Arrays;
 
+import Helpers.FacebookRequest;
+
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
-    
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private static final String TAG = "FacebookLogin";
-    private final int password_length = 6;
-    private DatabaseReference mDatabase;
+    //Firebase references
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseDatabase database;
-    CallbackManager callbackManager;
+    private DatabaseReference mDatabase;
+    private CallbackManager callbackManager;
 
-    String user_id;
-    String name;
-    String email;
-    JSONObject object;
+    //Helpers
+    private static FacebookRequest fbRequest;
 
-    LoginButton loginButton;
-    EditText email_input;
-    EditText password_input;
+    //JSON data variables
+    private JSONObject object;
+
+    //final variables
+    private final String TAG = "FacebookLogin";
+    private final int password_length = 6;
+
+    //Other data types
+    private String user_id;
+    private String name;
+    private String email;
+
+    //Visual elements
+    private LoginButton loginButton;
+    private EditText email_input;
+    private EditText password_input;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,25 +107,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 final FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                        new GraphRequest(
-                                AccessToken.getCurrentAccessToken(),
-                                "/me?fields=name,email",
-                                null,
-                                HttpMethod.GET,
-                                new GraphRequest.Callback() {
-                                    public void onCompleted(GraphResponse response) {
-                                        object = response.getJSONObject();
-                                        try {
-                                            name = object.getString("name");
-                                            user_id=mAuth.getCurrentUser().getUid().toString();
-                                            email = object.getString("email");
-                                            writeNewUser(user_id,name,email);
-                                            Log.d(TAG,name);
-                                        }
-                                        catch (Exception e) {
-                                        }
-                                    }
-                                }).executeAsync();
+                    String path = "/me?fields=name,email";
+                    object = fbRequest.getGraphApi(path,AccessToken.getCurrentAccessToken());
+                    try {
+                        name = object.getString("name");
+                        user_id=mAuth.getCurrentUser().getUid().toString();
+                        email = object.getString("email");
+                        writeNewUser(user_id,name,email);
+                        Log.d(TAG,name);
+                    }
+                    catch (Exception e) {
+                    }
                     open_main_activity();
                 } else {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
@@ -126,11 +126,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
         };
     }
+
     @Override
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -149,6 +151,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void onBackPressed() {
         finish();
     }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -199,6 +202,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 });
     }
 
+    private void writeNewUser(String userId, String name, String email) {
+        mDatabase.child("users").child(userId).child("username").setValue(name);
+        mDatabase.child("users").child(userId).child("email").setValue(email);
+        open_main_activity();
+    }
+
     private void signIn(String email, String password) {
         Log.d(TAG, "signIn:" + email);
         if (!validateForm()) {
@@ -229,6 +238,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 });
     }
 
+    private void signOut() {
+        mAuth.signOut();
+        LoginManager.getInstance().logOut();
+    }
+
+    private void open_main_activity(){
+        Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
+        LoginActivity.this.startActivity(new_activity);
+        finish();
+    }
+
     private boolean validateForm() {
         boolean valid = true;
 
@@ -256,24 +276,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
 
         return valid;
-    }
-
-    private void open_main_activity(){
-        Intent new_activity = new Intent(LoginActivity.this, MainActivity.class);
-        LoginActivity.this.startActivity(new_activity);
-        finish();
-    }
-
-    private void signOut() {
-        mAuth.signOut();
-        LoginManager.getInstance().logOut();
-    }
-
-
-    private void writeNewUser(String userId, String name, String email) {
-        mDatabase.child("users").child(userId).child("username").setValue(name);
-        mDatabase.child("users").child(userId).child("email").setValue(email);
-        open_main_activity();
     }
 
 }
