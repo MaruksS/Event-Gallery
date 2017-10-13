@@ -1,40 +1,32 @@
 package Helpers;
 
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
-
-import org.json.JSONObject;
+import android.os.AsyncTask;
 
 /**
  * Created by Sergejs on 12/10/2017.
  */
 
-public class FacebookRequest {
-    private static JSONObject object;
+public class FacebookRequest extends AsyncTask {
 
-    private FacebookRequest(JSONObject object) {
-        this.object = object;
+    @Override
+    protected Object doInBackground(Object[] params) {
+        return null;
     }
 
-    private static JSONObject GraphApiRequest(String path, AccessToken token){
-            new GraphRequest(
-                    token,
-                    path,
-                    null,
-                    HttpMethod.GET,
-                    new GraphRequest.Callback() {
-                        public void onCompleted(GraphResponse response) {
-                            object = response.getJSONObject();
-                        }
-                    }
-            ).executeAsync();
-        return object;
+    // you may separate this or combined to caller class.
+    public interface AsyncResponse {
+        void processFinish(String output);
     }
 
-    public static JSONObject getGraphApi(String path, AccessToken token){
-        return GraphApiRequest(path, token);
+    public AsyncResponse delegate = null;
+
+    public FacebookRequest(AsyncResponse delegate){
+        this.delegate = delegate;
+    }
+
+    @Override
+    protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
     }
 
 }

@@ -14,6 +14,9 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -47,7 +50,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private DatabaseReference all_events;
 
     //Helpers
-    private static FacebookRequest fbRequest;
     private static RandomStringGenerator stringGenerator;
 
     //JSON data variables
@@ -129,26 +131,33 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     public void get_upcoming_events(){
         String path =  "/me/events?since="+strDt;
-        AccessToken at =AccessToken.getCurrentAccessToken();
+        AccessToken token =AccessToken.getCurrentAccessToken();
 
-            object = fbRequest.getGraphApi(path,at);
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                public void run() {
-                    try {
-                        upcoming_events = object.getJSONArray("data");
-                        for (int i = 0; i < upcoming_events.length(); i++) {
-                            upcoming_event = upcoming_events.getJSONObject(i);
-                            fb_events.get(i).start_time = upcoming_event.getString("start_time");
-                            fb_events.get(i).description = upcoming_event.getString("description");
-                            fb_events.get(i).Name = upcoming_event.getString("name");
-                            fb_events.get(i).event_id = upcoming_event.getInt("id");
+        new GraphRequest(
+                token,
+                path,
+                null,
+                HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    public void onCompleted(GraphResponse response) {
+                        try {
+                            object = response.getJSONObject();
+                            upcoming_events = object.getJSONArray("data");
+                            for (int i = 0; i < upcoming_events.length(); i++) {
+                                FBEvent fbEvent= new FBEvent();
+                                upcoming_event = upcoming_events.getJSONObject(i);
+                                fbEvent.start_time = upcoming_event.getString("start_time");
+                                fbEvent.description = upcoming_event.getString("description");
+                                fbEvent.Name = upcoming_event.getString("name");
+                                fbEvent.event_id = upcoming_event.getInt("id");
+                                fb_events.add(fbEvent);
+                            }
+                        }
+                        catch(Exception e){
                         }
                     }
-                catch(Exception e){
                 }
-                }
-            }, 2500);   //1.5 seconds
+        ).executeAsync();
 
     }
 
