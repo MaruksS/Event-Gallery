@@ -15,6 +15,9 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -31,6 +34,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONObject;
 import java.util.Arrays;
 
+import Entities.FBEvent;
 import Helpers.FacebookRequest;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
@@ -108,21 +112,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 final FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     String path = "/me?fields=name,email";
-                    object = fbRequest.getGraphApi(path,AccessToken.getCurrentAccessToken());
-                    try {
-                        name = object.getString("name");
-                        user_id=mAuth.getCurrentUser().getUid().toString();
-                        email = object.getString("email");
-                        writeNewUser(user_id,name,email);
-                        Log.d(TAG,name);
-                    }
-                    catch (Exception e) {
-                    }
-                    open_main_activity();
+                    AccessToken token =AccessToken.getCurrentAccessToken();
+                    new GraphRequest(
+                            token,
+                            path,
+                            null,
+                            HttpMethod.GET,
+                            new GraphRequest.Callback() {
+                                public void onCompleted(GraphResponse response) {
+                                    try {
+                                        object = response.getJSONObject();
+                                        name = object.getString("name");
+                                        user_id=mAuth.getCurrentUser().getUid().toString();
+                                        email = object.getString("email");
+                                        writeNewUser(user_id,name,email);
+                                        Log.d(TAG,name);
+                                        open_main_activity();
+                                    }
+                                    catch (Exception e) {
+                                    }
+                                }
+                            }
+                    ).executeAsync();
+
                 } else {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
-
             }
         };
     }

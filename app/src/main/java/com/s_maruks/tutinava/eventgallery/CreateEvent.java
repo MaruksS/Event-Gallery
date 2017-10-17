@@ -6,6 +6,8 @@ import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -34,11 +36,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import Adapters.GalleryAdapter;
+import Adapters.UpcomingEventsAdapter;
 import Entities.Event;
 import Entities.FBEvent;
 import Entities.User;
-import Helpers.FacebookRequest;
 import Helpers.RandomStringGenerator;
 
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
@@ -57,11 +58,19 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private JSONObject upcoming_event;
     private JSONArray upcoming_events;
 
+    JSONObject object1;
+    JSONObject data_object;
+
+    //RecyclerView - related
+    private UpcomingEventsAdapter adapter;
+    private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLinearLayoutManager;
+
+
     //Other data types
     private Date currentTime;
     private String strDt;
     private String creator;
-    private ImageView iw;
     private boolean exists;
     List<FBEvent>fb_events= new ArrayList<>();
 
@@ -85,10 +94,12 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         user_events= mDatabase.child("users").child(creator).child("Created events");
         all_events = mDatabase.child("events");
         currentTime  = Calendar.getInstance().getTime();
-        iw = (ImageView)findViewById(R.id.imageView2);
 
         SimpleDateFormat simpleDate =  new SimpleDateFormat("dd.MM.yyyy");
         strDt = simpleDate.format(currentTime);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.rw_fb);
+        mLinearLayoutManager = new LinearLayoutManager(this);
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -149,8 +160,9 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                                 fbEvent.start_time = upcoming_event.getString("start_time");
                                 fbEvent.description = upcoming_event.getString("description");
                                 fbEvent.Name = upcoming_event.getString("name");
-                                fbEvent.event_id = upcoming_event.getInt("id");
+                                fbEvent.event_id = upcoming_event.getLong("id");
                                 fb_events.add(fbEvent);
+                                display_data();
                             }
                         }
                         catch(Exception e){
@@ -174,13 +186,14 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         create_toast("Event with this name already exists");
     }
 
+    private void display_data(){
+        adapter = new UpcomingEventsAdapter(this, fb_events);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(adapter);
+    }
+
     private void display_picture(){
 
-
-        Glide.with(this)
-                .load("https://scontent.xx.fbcdn.net/v/t1.0-0/c19.0.50.50/p50x50/22449785_1635992856444894_2693274557934630191_n.jpg?oh=d7d86a1a4644daaec3ae8233e4f6b995&oe=5A84C6B8")
-                .centerCrop()
-                .into(iw);
     }
 
     private void open_login_screen(){

@@ -12,35 +12,33 @@
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
 
-        <Button
-            android:id="@+id/fb_events"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/btn_create"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="32dp"
-            android:text="Get upcoming FB events" />
-
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@android:drawable/ic_menu_camera"
-            android:layout_alignBottom="@+id/btn_create"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="23dp" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rw_fb"
+            android:layout_width="325dp"
+            android:layout_height="200dp"
+            android:layout_alignStart="@+id/imageView2"
+            android:layout_below="@+id/textInputLayout"
+            android:layout_marginTop="14dp" />
 
         <Button
             android:id="@+id/btn_create"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/textInputLayout"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="45dp"
             android:layout_weight="1"
             android:text="Create Event"
             tools:layout_editor_absoluteX="126dp"
-            tools:layout_editor_absoluteY="107dp" />
+            tools:layout_editor_absoluteY="107dp"
+            android:layout_above="@+id/fb_events"
+            android:layout_centerHorizontal="true" />
+
+        <Button
+            android:id="@+id/fb_events"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get upcoming FB events"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="12dp" />
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/textInputLayout"
