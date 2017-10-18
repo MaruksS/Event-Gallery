@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -28,6 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -40,6 +42,7 @@ import Adapters.UpcomingEventsAdapter;
 import Entities.Event;
 import Entities.FBEvent;
 import Entities.User;
+import Helpers.FacebookRequest;
 import Helpers.RandomStringGenerator;
 
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
@@ -52,6 +55,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     //Helpers
     private static RandomStringGenerator stringGenerator;
+    private static FacebookRequest fbRequest;
 
     //JSON data variables
     private JSONObject object;
@@ -78,6 +82,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private EditText event_name_input;
     private Toast currentToast;
 
+    AccessToken token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +112,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     Log.d("user",mAuth.getCurrentUser().toString());
-                    display_picture();
+
                 } else {
                     open_login_screen();
                 }
@@ -137,12 +142,14 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                 create_event();
             case R.id.fb_events:
                 get_upcoming_events();
+                display_picture();
+
         }
     }
 
     public void get_upcoming_events(){
         String path =  "/me/events?since="+strDt;
-        AccessToken token =AccessToken.getCurrentAccessToken();
+        token =AccessToken.getCurrentAccessToken();
 
         new GraphRequest(
                 token,
@@ -173,6 +180,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     }
 
+
     private void create_event(){
         String event_name = event_name_input.getText().toString();
         String event_id = event_name.replace(' ', '-').toLowerCase();
@@ -193,7 +201,9 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     private void display_picture(){
-
+        token =AccessToken.getCurrentAccessToken();
+        String path = "/me";
+        JSONObject object= fbRequest.getGraphApi(path,token);
     }
 
     private void open_login_screen(){
