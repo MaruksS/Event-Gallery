@@ -1,7 +1,6 @@
 package Adapters;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,22 +9,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
-import com.firebase.ui.storage.images.FirebaseImageLoader;
-import com.s_maruks.tutinava.eventgallery.CreateEvent;
 import com.s_maruks.tutinava.eventgallery.R;
-
-import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.List;
 
 import Entities.FBEvent;
 
-import static com.s_maruks.tutinava.eventgallery.R.id.event_name;
 import static com.s_maruks.tutinava.eventgallery.R.id.iw_image;
 
 /**
@@ -35,12 +25,7 @@ import static com.s_maruks.tutinava.eventgallery.R.id.iw_image;
 public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAdapter.EventsViewHolder>{
     private LayoutInflater inflater;
     List<FBEvent> events = Collections.emptyList();
-    JSONObject object;
-    JSONObject data_object;
     String photoRef;
-    String name;
-    String date;
-    int id;
 
     // Define listener member variable
     private static UpcomingEventsAdapter.OnRecyclerViewItemClickListener mListener;
@@ -73,38 +58,11 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
         FBEvent current = events.get(position);
         String name = current.Name;
         String date = current.start_time;
-        long id = current.event_id;
-
-
-        Context context = UpcomingEventsAdapter.EventsViewHolder.display_image.getContext();
-
-        String path =  "/"+id+"/picture";
-        AccessToken token =AccessToken.getCurrentAccessToken();
-
-        new GraphRequest(
-                token,
-                path,
-                null,
-                HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    public void onCompleted(GraphResponse response) {
-                        try {
-                            object = response.getJSONObject();
-                            data_object = object.getJSONObject("data");
-                            String photoRef=data_object.getString("url");
-                            Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
-                                    .load(photoRef)
-                                    .asBitmap()
-                                    .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
-
-                        }
-                        catch(Exception e){
-                        }
-                    }
-                }
-        ).executeAsync();
-
-
+        photoRef= current.image_url;
+        Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
+                .load(photoRef)
+                .asBitmap()
+                .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
         EventsViewHolder.event_date.setText(date);
         EventsViewHolder.event_name.setText(name);
 

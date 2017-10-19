@@ -142,8 +142,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                 create_event();
             case R.id.fb_events:
                 get_upcoming_events();
-                display_picture();
-
         }
     }
 
@@ -167,10 +165,10 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                                 fbEvent.start_time = upcoming_event.getString("start_time");
                                 fbEvent.description = upcoming_event.getString("description");
                                 fbEvent.Name = upcoming_event.getString("name");
-                                fbEvent.event_id = upcoming_event.getLong("id");
+                                fbEvent.event_id = upcoming_event.getString("id");
                                 fb_events.add(fbEvent);
-                                display_data();
                             }
+                            get_display_picture();
                         }
                         catch(Exception e){
                         }
@@ -196,14 +194,36 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     private void display_data(){
         adapter = new UpcomingEventsAdapter(this, fb_events);
+
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(adapter);
     }
 
-    private void display_picture(){
+    private void get_display_picture(){
         token =AccessToken.getCurrentAccessToken();
-        String path = "/me";
-        JSONObject object= fbRequest.getGraphApi(path,token);
+        for (int i = 0; i < fb_events.size(); i++) {
+            String path =  "/"+fb_events.get(i).event_id+"/picture?redirect=false";
+            final int finalI = i;
+            new GraphRequest(
+                    token,
+                    path,
+                    null,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        public void onCompleted(GraphResponse response) {
+                            try {
+                                object = response.getJSONObject();
+                                data_object = object.getJSONObject("data");
+                                fb_events.get(finalI).image_url=data_object.getString("url");
+                                display_data();
+                            }
+                            catch(Exception e){
+                            }
+                        }
+                    }
+            ).executeAsync();
+        }
+
     }
 
     private void open_login_screen(){
