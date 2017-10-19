@@ -34,9 +34,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONObject;
 import java.util.Arrays;
 
-import Entities.FBEvent;
-import Helpers.FacebookRequest;
-
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
     //Firebase references
     private FirebaseAuth mAuth;
@@ -44,9 +41,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseDatabase database;
     private DatabaseReference mDatabase;
     private CallbackManager callbackManager;
-
-    //Helpers
-    private static FacebookRequest fbRequest;
 
     //JSON data variables
     private JSONObject object;

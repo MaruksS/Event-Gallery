@@ -1,8 +1,8 @@
 package com.s_maruks.tutinava.eventgallery;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,11 +11,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
@@ -29,7 +27,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -42,8 +39,8 @@ import Adapters.UpcomingEventsAdapter;
 import Entities.Event;
 import Entities.FBEvent;
 import Entities.User;
-import Helpers.FacebookRequest;
-import Helpers.RandomStringGenerator;
+import Helpers.DatePickerFragment;
+import Helpers.LayoutExpander;
 
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
     //Firebase references
@@ -54,21 +51,20 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private DatabaseReference all_events;
 
     //Helpers
-    private static RandomStringGenerator stringGenerator;
-    private static FacebookRequest fbRequest;
+    private static LayoutExpander layoutAnimationManager;
 
     //JSON data variables
     private JSONObject object;
     private JSONObject upcoming_event;
     private JSONArray upcoming_events;
 
-    JSONObject object1;
     JSONObject data_object;
 
     //RecyclerView - related
     private UpcomingEventsAdapter adapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
+    private RelativeLayout animated_layout;
 
 
     //Other data types
@@ -77,6 +73,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private String creator;
     private boolean exists;
     List<FBEvent>fb_events= new ArrayList<>();
+    private boolean isVisible;
+    private boolean isLoaded;
 
     //Visual elements
     private EditText event_name_input;
@@ -91,7 +89,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
         event_name_input = (EditText) findViewById(R.id.txt_name);
         findViewById(R.id.btn_create).setOnClickListener(this);
-        findViewById(R.id.fb_events).setOnClickListener(this);
+        findViewById(R.id.btn_fb).setOnClickListener(this);
+        findViewById(R.id.btn_date).setOnClickListener(this);
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -103,6 +102,9 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         SimpleDateFormat simpleDate =  new SimpleDateFormat("dd.MM.yyyy");
         strDt = simpleDate.format(currentTime);
 
+        layoutAnimationManager= new LayoutExpander();
+        isVisible = false;
+        isLoaded=false;
         mRecyclerView = (RecyclerView) findViewById(R.id.rw_fb);
         mLinearLayoutManager = new LinearLayoutManager(this);
 
@@ -138,10 +140,15 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.btn_date:
+                showDatePickerDialog(v);
+                break;
             case R.id.btn_create:
-                create_event();
-            case R.id.fb_events:
-                get_upcoming_events();
+                //create_event();
+                break;
+            case R.id.btn_fb:
+                launch_animation();
+                break;
         }
     }
 
@@ -194,9 +201,16 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     private void display_data(){
         adapter = new UpcomingEventsAdapter(this, fb_events);
-
+        adapter.setOnRecyclerViewItemClickListener(new UpcomingEventsAdapter.OnRecyclerViewItemClickListener() {
+            @Override
+            public void onItemClicked(CharSequence text) {
+                create_from_event(text.toString());
+                create_toast(text.toString());
+            }
+        });
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(adapter);
+        isLoaded=true;
     }
 
     private void get_display_picture(){
@@ -262,9 +276,38 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         return exists;
     }
 
-    public void create_toast(String msg) {
+    private void create_toast(String msg) {
         if (currentToast != null) currentToast.cancel();
         currentToast = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT);
         currentToast.show();
+    }
+
+    private void create_from_event(String event_id){
+
+        Event new_event = new Event();
+
+    }
+
+    private void launch_animation(){
+        if (isVisible) {
+            layoutAnimationManager.expand(mRecyclerView, 1000, -500);
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    mRecyclerView.setVisibility(View.GONE);
+                }
+            }, 200);
+            isVisible = false;
+        } else if (!isVisible){
+            if (!isLoaded) get_upcoming_events();
+            layoutAnimationManager.expand(mRecyclerView, 1000, 500);
+            mRecyclerView.setVisibility(View.VISIBLE);
+            isVisible = true;
+        }
+    }
+
+    private void showDatePickerDialog(View v) {
+        DialogFragment newFragment = new DatePickerFragment();
+        newFragment.show(getFragmentManager(), "datePicker");
     }
 }

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -65,7 +66,7 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
                 .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
         EventsViewHolder.event_date.setText(date);
         EventsViewHolder.event_name.setText(name);
-
+        EventsViewHolder.event_layout.setTag(current.event_id);
     }
 
     @Override
@@ -77,20 +78,22 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
         static ImageView display_image;
         static TextView event_name;
         static TextView event_date;
+        static RelativeLayout event_layout;
         public EventsViewHolder(View itemView) {
             super(itemView);
             display_image = (ImageView) itemView.findViewById(iw_image);
+            event_name = (TextView)itemView.findViewById(R.id.txt_name);
+            event_date = (TextView)itemView.findViewById(R.id.txt_date);
+            event_layout= (RelativeLayout) itemView.findViewById(R.id.event_layout);
             display_image.setMinimumWidth(50);
             display_image.setMinimumHeight(50);
-            display_image.setOnClickListener(new View.OnClickListener() {
+            event_layout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.
                     mListener.onItemClicked((CharSequence) v.getTag());
                 }
             });
-            event_name = (TextView)itemView.findViewById(R.id.txt_name);
-            event_date = (TextView)itemView.findViewById(R.id.txt_date);
         }
     }
 }
