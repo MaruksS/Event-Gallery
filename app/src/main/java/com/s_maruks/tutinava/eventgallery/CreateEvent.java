@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -57,27 +58,37 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private JSONObject object;
     private JSONObject upcoming_event;
     private JSONArray upcoming_events;
-
     JSONObject data_object;
 
     //RecyclerView - related
     private UpcomingEventsAdapter adapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
-    private RelativeLayout animated_layout;
 
 
     //Other data types
     private Date currentTime;
     private String strDt;
+    private String dateToShow;
     private String creator;
     private boolean exists;
-    List<FBEvent>fb_events= new ArrayList<>();
+    private List<FBEvent>fb_events= new ArrayList<>();
+    private FBEvent selected_event;
     private boolean isVisible;
     private boolean isLoaded;
 
+    //final variables
+    private final String FB_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss+SSSS";
+    private final String DISPLAY_DATE_FORMAT = "dd.MMMM yyyy";
+    private final String SIMPLE_DATE_FORMAT = "dd.MM.yyyy";
+
+    private SimpleDateFormat displayDate;
+    private SimpleDateFormat simpleDate;
+
     //Visual elements
     private EditText event_name_input;
+    private EditText event_description_input;
+    private TextView event_date_field;
     private Toast currentToast;
 
     AccessToken token;
@@ -88,37 +99,42 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         setContentView(R.layout.activity_create_event);
 
         event_name_input = (EditText) findViewById(R.id.txt_name);
+        event_description_input= (EditText) findViewById(R.id.txt_desc);
+        event_date_field= (TextView)findViewById(R.id.tw_date);
         findViewById(R.id.btn_create).setOnClickListener(this);
         findViewById(R.id.btn_fb).setOnClickListener(this);
         findViewById(R.id.btn_date).setOnClickListener(this);
+
+        currentTime  = Calendar.getInstance().getTime();
+
+        simpleDate =  new SimpleDateFormat(SIMPLE_DATE_FORMAT);
+        displayDate =  new SimpleDateFormat(DISPLAY_DATE_FORMAT);
+
+        dateToShow = displayDate.format(currentTime);
+        event_date_field.setText(dateToShow);
+        strDt = simpleDate.format(currentTime);
+
+        isVisible = false;
+        isLoaded=false;
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         creator = mAuth.getCurrentUser().getUid().toString();
         user_events= mDatabase.child("users").child(creator).child("Created events");
         all_events = mDatabase.child("events");
-        currentTime  = Calendar.getInstance().getTime();
-
-        SimpleDateFormat simpleDate =  new SimpleDateFormat("dd.MM.yyyy");
-        strDt = simpleDate.format(currentTime);
 
         layoutAnimationManager= new LayoutExpander();
-        isVisible = false;
-        isLoaded=false;
         mRecyclerView = (RecyclerView) findViewById(R.id.rw_fb);
         mLinearLayoutManager = new LinearLayoutManager(this);
-
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     Log.d("user",mAuth.getCurrentUser().toString());
-
                 } else {
                     open_login_screen();
                 }
-
             }
         };
     }
@@ -144,7 +160,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                 showDatePickerDialog(v);
                 break;
             case R.id.btn_create:
-                //create_event();
+                create_event();
                 break;
             case R.id.btn_fb:
                 launch_animation();
@@ -189,9 +205,11 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private void create_event(){
         String event_name = event_name_input.getText().toString();
         String event_id = event_name.replace(' ', '-').toLowerCase();
+        String event_description = event_description_input.getText().toString();
+        String fb_event_id=selected_event.event_id;
         if (!Exists(event_id)){
             List<User> participants = new ArrayList<>();
-            Event event = new Event(event_name,creator,event_id,participants);
+            Event event = new Event(event_name,creator,event_id,participants,fb_event_id);
             user_events.child(event_id).setValue(event_id);
             mDatabase.child("events").child(event_id).setValue(event);
         }
@@ -284,13 +302,24 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     private void create_from_event(String event_id){
 
-        Event new_event = new Event();
+        for (int i=0;i<fb_events.size();i++){
+            if (fb_events.get(i).event_id==event_id){
+                selected_event=fb_events.get(i);
+                event_name_input.setText(selected_event.Name);
+                event_description_input.setText(selected_event.description);
+                Date event_date = parseDate(selected_event.start_time);
+                String display_date = displayDate.format(event_date);
+                event_date_field.setText(display_date);
+
+                launch_animation();
+            }
+        }
 
     }
 
     private void launch_animation(){
         if (isVisible) {
-            layoutAnimationManager.expand(mRecyclerView, 1000, -500);
+            layoutAnimationManager.expand(mRecyclerView, 1000, -600);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
@@ -300,7 +329,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
             isVisible = false;
         } else if (!isVisible){
             if (!isLoaded) get_upcoming_events();
-            layoutAnimationManager.expand(mRecyclerView, 1000, 500);
+            layoutAnimationManager.expand(mRecyclerView, 1000, 600);
             mRecyclerView.setVisibility(View.VISIBLE);
             isVisible = true;
         }
@@ -309,5 +338,15 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private void showDatePickerDialog(View v) {
         DialogFragment newFragment = new DatePickerFragment();
         newFragment.show(getFragmentManager(), "datePicker");
+    }
+
+    public Date parseDate(String str) {
+        SimpleDateFormat sdf = new SimpleDateFormat(FB_DATE_FORMAT);
+        Date date = null;
+        try {
+             date = sdf.parse(str);
+        } catch(Exception e) {
+        }
+        return date;
     }
 }

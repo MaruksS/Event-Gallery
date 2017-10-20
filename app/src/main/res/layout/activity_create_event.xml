@@ -16,9 +16,7 @@
             android:id="@+id/rw_fb"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="11dp"
+            android:layout_below="@+id/btn_fb"
             android:visibility="gone" />
 
         <Button
@@ -29,16 +27,15 @@
             android:text="Create Event"
             tools:layout_editor_absoluteX="126dp"
             tools:layout_editor_absoluteY="107dp"
-            android:layout_above="@+id/btn_fb"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"/>
 
         <Button
             android:id="@+id/btn_fb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="12dp"
+            android:layout_alignParentTop="true"
             android:text="Get upcoming FB events" />
 
         <android.support.design.widget.TextInputLayout
@@ -61,25 +58,38 @@
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="29dp"
+            android:id="@+id/textInputLayout2"
             android:layout_below="@+id/textInputLayout"
-            android:layout_toEndOf="@+id/rw_fb"
-            android:id="@+id/textInputLayout2">
+            android:layout_toEndOf="@+id/rw_fb">
 
             <EditText
+                android:id="@+id/txt_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Description" />
+                android:hint="Description"
+                android:maxLines="5" />
         </android.support.design.widget.TextInputLayout>
 
         <Button
             android:id="@+id/btn_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Date picker"
-            android:layout_above="@+id/btn_create"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="13dp" />
+            android:layout_marginRight="30dp"
+            android:text="Set Date"
+            android:layout_alignBaseline="@+id/tw_date"
+            android:layout_alignBottom="@+id/tw_date"
+            android:layout_toEndOf="@+id/btn_create" />
+
+        <TextView
+            android:id="@+id/tw_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textInputLayout2"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_toEndOf="@+id/rw_fb"
+            android:text="TextView"
+            android:textSize="24sp" />
 
     </RelativeLayout>
 
