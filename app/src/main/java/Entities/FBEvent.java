@@ -8,8 +8,8 @@ import java.util.List;
 
 public class FBEvent {
 
-    public String Name;
-    public String  event_id;
+    public String name;
+    public String event_id;
     public String description;
     public String start_time;
     public String image_url;
@@ -19,7 +19,7 @@ public class FBEvent {
     }
 
     public FBEvent(String name, String description, String start_time,String event_id, String image_url) {
-        this.Name = name;
+        this.name = name;
         this.event_id= event_id;
         this.description= description;
         this.start_time=start_time;

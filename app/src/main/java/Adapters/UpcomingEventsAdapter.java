@@ -57,7 +57,7 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
     @Override
     public void onBindViewHolder(UpcomingEventsAdapter.EventsViewHolder holder, int position) {
         FBEvent current = events.get(position);
-        String name = current.Name;
+        String name = current.name;
         String date = current.start_time;
         photoRef= current.image_url;
         Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())

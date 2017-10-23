@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth.AuthStateListener mAuthListener;
     private DatabaseReference mDatabase;
     private DatabaseReference user_events;
-    private DatabaseReference all_events;
+    private DatabaseReference sinle_event;
 
     //RecyclerView - related
     private MainAdapter adapter;
@@ -63,8 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     creator = mAuth.getCurrentUser().getUid().toString();
-                    user_events= mDatabase.child("users").child(creator).child("Created events");
-                    all_events= mDatabase.child("events");
+                    user_events= mDatabase.child("users").child(creator).child("Attending");
                     display_data();
                 } else {
                     open_login_screen();
@@ -129,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 open_event(text.toString());
             }
         });
+        //TODO: replace handler with better way of waiting till receive all data
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
@@ -164,18 +164,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private List<Event> get_events(){
-        final List<Event> created_events = new ArrayList<>();
+        final List<Event> displayed_events= new ArrayList<>();
         try {
-            all_events.addListenerForSingleValueEvent(new ValueEventListener() {
+            //getting all events id from users.user_id.attending
+            user_events.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                        Event event = messageSnapshot.getValue(Event.class);
-                        if (event.creator_id.equals(creator)){
-                            created_events.add(event);
-                        }
+                        String event_id = messageSnapshot.getKey();
+                        sinle_event=mDatabase.child("events").child(event_id);
 
-
+                        //getting all events 1 by 1
+                        sinle_event.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Event event = dataSnapshot.getValue(Event.class);
+                                displayed_events.add(event);
+                            }
+                            @Override
+                            public void onCancelled(DatabaseError error) {
+                                // Failed to read value
+                                Log.w("", "Failed to read value.", error.toException());
+                            }
+                        });
                     }
                 }
                 @Override
@@ -183,13 +194,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // Failed to read value
                     Log.w("", "Failed to read value.", error.toException());
                 }
-
             });
         }
         catch (Exception e){
-
         }
-        return created_events;
+        return displayed_events;
     }
 
 }

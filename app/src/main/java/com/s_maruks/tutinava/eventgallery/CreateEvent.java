@@ -11,7 +11,6 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +43,7 @@ import Helpers.DatePickerFragment;
 import Helpers.LayoutExpander;
 
 public class CreateEvent extends AppCompatActivity  implements View.OnClickListener{
+
     //Firebase references
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -56,9 +56,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     //JSON data variables
     private JSONObject object;
-    private JSONObject upcoming_event;
-    private JSONArray upcoming_events;
-    JSONObject data_object;
 
     //RecyclerView - related
     private UpcomingEventsAdapter adapter;
@@ -67,13 +64,12 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
 
     //Other data types
-    private Date currentTime;
-    private String strDt;
+    private String stringDate;
     private String dateToShow;
     private String creator;
-    private boolean exists;
-    private List<FBEvent>fb_events= new ArrayList<>();
     private FBEvent selected_event;
+    private List<FBEvent>fb_events= new ArrayList<>();
+    private boolean exists;
     private boolean isVisible;
     private boolean isLoaded;
 
@@ -105,22 +101,23 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         findViewById(R.id.btn_fb).setOnClickListener(this);
         findViewById(R.id.btn_date).setOnClickListener(this);
 
-        currentTime  = Calendar.getInstance().getTime();
+        Date currentTime  = Calendar.getInstance().getTime();
 
         simpleDate =  new SimpleDateFormat(SIMPLE_DATE_FORMAT);
         displayDate =  new SimpleDateFormat(DISPLAY_DATE_FORMAT);
 
         dateToShow = displayDate.format(currentTime);
+        stringDate = simpleDate.format(currentTime);
         event_date_field.setText(dateToShow);
-        strDt = simpleDate.format(currentTime);
 
+        exists= true;
         isVisible = false;
-        isLoaded=false;
+        isLoaded = false;
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         creator = mAuth.getCurrentUser().getUid().toString();
-        user_events= mDatabase.child("users").child(creator).child("Created events");
+        user_events= mDatabase.child("users").child(creator).child("Attending");
         all_events = mDatabase.child("events");
 
         layoutAnimationManager= new LayoutExpander();
@@ -169,25 +166,20 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     public void get_upcoming_events(){
-        String path =  "/me/events?since="+strDt;
+        String path =  "/me/events?since="+stringDate;
         token =AccessToken.getCurrentAccessToken();
-
-        new GraphRequest(
-                token,
-                path,
-                null,
-                HttpMethod.GET,
+        new GraphRequest(token, path, null, HttpMethod.GET,
                 new GraphRequest.Callback() {
                     public void onCompleted(GraphResponse response) {
                         try {
                             object = response.getJSONObject();
-                            upcoming_events = object.getJSONArray("data");
+                            JSONArray upcoming_events = object.getJSONArray("data");
                             for (int i = 0; i < upcoming_events.length(); i++) {
                                 FBEvent fbEvent= new FBEvent();
-                                upcoming_event = upcoming_events.getJSONObject(i);
+                                JSONObject upcoming_event = upcoming_events.getJSONObject(i);
                                 fbEvent.start_time = upcoming_event.getString("start_time");
                                 fbEvent.description = upcoming_event.getString("description");
-                                fbEvent.Name = upcoming_event.getString("name");
+                                fbEvent.name = upcoming_event.getString("name");
                                 fbEvent.event_id = upcoming_event.getString("id");
                                 fb_events.add(fbEvent);
                             }
@@ -198,23 +190,36 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                     }
                 }
         ).executeAsync();
-
     }
 
-
     private void create_event(){
-        String event_name = event_name_input.getText().toString();
-        String event_id = event_name.replace(' ', '-').toLowerCase();
-        String event_description = event_description_input.getText().toString();
-        String fb_event_id=selected_event.event_id;
-        if (!Exists(event_id)){
-            List<User> participants = new ArrayList<>();
-            Event event = new Event(event_name,creator,event_id,participants,fb_event_id);
-            user_events.child(event_id).setValue(event_id);
-            mDatabase.child("events").child(event_id).setValue(event);
-        }
-       else Log.d("message","exists");
-        create_toast("Event with this name already exists");
+        final String event_name = event_name_input.getText().toString();
+        final String event_id = event_name.replace(' ', '-').toLowerCase();
+        final String event_description = event_description_input.getText().toString();
+        final String fb_event_id=selected_event.event_id;
+        DatabaseReference event = all_events.child(event_id);
+        event.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChildren()==true){
+                    Log.d("message","exists");
+                    create_toast("Event with this name already exists");
+                }
+                else{
+                    Log.d("message","OK");
+                    List<User> participants = new ArrayList<>();
+                    Event event = new Event(event_name,event_description,creator,event_id,participants,fb_event_id);
+                    user_events.child(event_id).setValue(true);
+                    mDatabase.child("events").child(event_id).setValue(event);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w("", "Failed to read value.", error.toException());
+            }
+
+        });
     }
 
     private void display_data(){
@@ -223,7 +228,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
             @Override
             public void onItemClicked(CharSequence text) {
                 create_from_event(text.toString());
-                create_toast(text.toString());
             }
         });
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
@@ -245,7 +249,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                         public void onCompleted(GraphResponse response) {
                             try {
                                 object = response.getJSONObject();
-                                data_object = object.getJSONObject("data");
+                                JSONObject data_object = object.getJSONObject("data");
                                 fb_events.get(finalI).image_url=data_object.getString("url");
                                 display_data();
                             }
@@ -267,33 +271,6 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         finish();
     }
 
-    private boolean Exists(String id){
-        DatabaseReference event = all_events.child(id);
-        event.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                    if (messageSnapshot!=null){
-                        Log.d("message","exists");
-                        exists = true;
-                    }
-                    else{
-                        Log.d("message","OK");
-                        exists = false;
-                    }
-
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("", "Failed to read value.", error.toException());
-            }
-
-        });
-        return exists;
-    }
-
     private void create_toast(String msg) {
         if (currentToast != null) currentToast.cancel();
         currentToast = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT);
@@ -305,7 +282,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         for (int i=0;i<fb_events.size();i++){
             if (fb_events.get(i).event_id==event_id){
                 selected_event=fb_events.get(i);
-                event_name_input.setText(selected_event.Name);
+                event_name_input.setText(selected_event.name);
                 event_description_input.setText(selected_event.description);
                 Date event_date = parseDate(selected_event.start_time);
                 String display_date = displayDate.format(event_date);
@@ -340,7 +317,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         newFragment.show(getFragmentManager(), "datePicker");
     }
 
-    public Date parseDate(String str) {
+    private Date parseDate(String str) {
         SimpleDateFormat sdf = new SimpleDateFormat(FB_DATE_FORMAT);
         Date date = null;
         try {
