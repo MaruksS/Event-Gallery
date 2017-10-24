@@ -2,6 +2,8 @@ package com.s_maruks.tutinava.eventgallery;
 
 import android.app.DialogFragment;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +28,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -78,6 +87,12 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private final String DISPLAY_DATE_FORMAT = "dd.MMMM yyyy";
     private final String SIMPLE_DATE_FORMAT = "dd.MM.yyyy";
 
+    public final static int WHITE = 0xFFFFFFFF;
+    public final static int BLACK = 0xFF000000;
+    public final static int WIDTH = 400;
+    public final static int HEIGHT = 400;
+    public final static String STR = "A string to be encoded as QR code";
+
     private SimpleDateFormat displayDate;
     private SimpleDateFormat simpleDate;
 
@@ -113,6 +128,14 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         exists= true;
         isVisible = false;
         isLoaded = false;
+
+        ImageView imageView = (ImageView) findViewById(R.id.myImage);
+        try {
+            Bitmap bitmap = encodeAsBitmap(STR);
+            imageView.setImageBitmap(bitmap);
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -157,7 +180,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                 showDatePickerDialog(v);
                 break;
             case R.id.btn_create:
-                create_event();
+                //create_event();
+                scan();
                 break;
             case R.id.btn_fb:
                 launch_animation();
@@ -325,5 +349,45 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         } catch(Exception e) {
         }
         return date;
+    }
+
+    Bitmap encodeAsBitmap(String str) throws WriterException {
+        BitMatrix result;
+        try {
+            result = new MultiFormatWriter().encode(str,
+                    BarcodeFormat.QR_CODE, WIDTH, HEIGHT, null);
+        } catch (IllegalArgumentException iae) {
+            // Unsupported format
+            return null;
+        }
+
+        int w = result.getWidth();
+        int h = result.getHeight();
+        int[] pixels = new int[w * h];
+        for (int y = 0; y < h; y++) {
+            int offset = y * w;
+            for (int x = 0; x < w; x++) {
+                pixels[offset + x] = result.get(x, y) ? BLACK : WHITE;
+            }
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, w, 0, 0, w, h);
+        return bitmap;
+    }
+
+    private void scan(){
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.setOrientationLocked(false);
+        integrator.initiateScan();
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+        if (scanResult != null) {
+            String code = scanResult.getContents();
+            Log.d("msg",code);
+        }
+        // else continue with any other code you need in the method
     }
 }
