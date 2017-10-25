@@ -214,7 +214,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void writeNewUser(String userId, String name, String email) {
         mDatabase.child("users").child(userId).child("username").setValue(name);
         mDatabase.child("users").child(userId).child("email").setValue(email);
-        open_main_activity();
     }
 
     private void signIn(String email, String password) {

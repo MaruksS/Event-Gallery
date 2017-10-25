@@ -18,11 +18,20 @@
         android:id="@+id/btn_create"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
-        tools:layout_editor_absoluteX="264dp"
-        tools:layout_editor_absoluteY="142dp"
-        android:layout_marginTop="43dp"
         android:layout_below="@+id/rw_main"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="43dp"
+        android:text="Create Event"
+        tools:layout_editor_absoluteX="264dp"
+        tools:layout_editor_absoluteY="142dp" />
+
+    <Button
+        android:id="@+id/btn_join"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_create"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="34dp"
+        android:text="Join Event" />
 
 </RelativeLayout>

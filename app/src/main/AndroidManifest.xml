@@ -7,9 +7,13 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-feature android:name="android.hardware.camera2" android:required="true"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-feature
+        android:name="android.hardware.camera2"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <provider
         android:name="com.facebook.FacebookContentProvider"
@@ -45,7 +49,9 @@
         </activity>
         <activity android:name=".ProfileActivity" />
         <activity android:name=".CreateEvent" />
-        <activity android:name=".ViewEvent"></activity>
+        <activity android:name=".ViewEvent" />
+        <activity android:name=".InviteActivity" />
+        <activity android:name=".JoinEventActivity"></activity>
     </application>
 
 </manifest>

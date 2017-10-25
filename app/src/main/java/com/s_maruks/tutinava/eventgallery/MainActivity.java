@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLinearLayoutManager = new LinearLayoutManager(this);
 
         findViewById(R.id.btn_create).setOnClickListener(this);
+        findViewById(R.id.btn_join).setOnClickListener(this);
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -112,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()){
             case R.id.btn_create :
                 create_event();
+            case R.id.btn_join:
+                open_join_event();
         }
     }
 
@@ -160,6 +163,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void open_event(String event){
         Intent new_activity = new Intent(MainActivity.this, ViewEvent.class);
         new_activity.putExtra("event_id",event);
+        startActivity(new_activity);
+    }
+
+    private void open_join_event(){
+        Intent new_activity = new Intent(MainActivity.this, JoinEventActivity.class);
         startActivity(new_activity);
     }
 
