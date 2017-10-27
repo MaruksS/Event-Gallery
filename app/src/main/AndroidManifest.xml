@@ -51,7 +51,8 @@
         <activity android:name=".CreateEvent" />
         <activity android:name=".ViewEvent" />
         <activity android:name=".InviteActivity" />
-        <activity android:name=".JoinEventActivity"></activity>
+        <activity android:name=".JoinEventActivity" />
+        <activity android:name=".EditEventActivity"></activity>
     </application>
 
 </manifest>
