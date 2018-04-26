@@ -161,7 +161,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     public void get_upcoming_events(){
-        String path =  "/me/events?since="+stringDate;
+        String path =  "/me/events?since=18.04.2018";
         token =AccessToken.getCurrentAccessToken();
         new GraphRequest(token, path, null, HttpMethod.GET,
                 new GraphRequest.Callback() {
@@ -191,7 +191,12 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         final String event_name = event_name_input.getText().toString();
         final String event_id = event_name.replace(' ', '-').toLowerCase();
         final String event_description = event_description_input.getText().toString();
-        final String fb_event_id=selected_event.event_id;
+        final String fb_event_id;
+        if (selected_event != null){
+            fb_event_id=selected_event.event_id;
+        }
+        else fb_event_id=null;
+
         DatabaseReference event = all_events.child(event_id);
         event.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -234,28 +239,29 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private void get_display_picture(){
         token =AccessToken.getCurrentAccessToken();
         for (int i = 0; i < fb_events.size(); i++) {
-            String path =  "/"+fb_events.get(i).event_id+"/picture?redirect=false";
             final int finalI = i;
+            fb_events.get(finalI).image_url = "http://snappyhouse.com.sg/templates/bootstrap2-responsive/assets/images/v2/featured_placeholder-400x300.png";
+            display_data();
+           /* String path = "/" + fb_events.get(i).event_id + "?fields=cover";
             new GraphRequest(
                     token,
                     path,
-                    null,
+                    null,http://snappyhouse.com.sg/templates/bootstrap2-responsive/assets/images/v2/featured_placeholder-400x300.png
                     HttpMethod.GET,
                     new GraphRequest.Callback() {
                         public void onCompleted(GraphResponse response) {
                             try {
                                 object = response.getJSONObject();
                                 JSONObject data_object = object.getJSONObject("data");
-                                fb_events.get(finalI).image_url=data_object.getString("url");
-                                display_data();
+
                             }
                             catch(Exception e){
                             }
                         }
                     }
             ).executeAsync();
+        }*/
         }
-
     }
 
     private void open_login_screen(){

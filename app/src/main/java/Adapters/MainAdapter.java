@@ -1,13 +1,13 @@
 package Adapters;
 
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.TextView;
-
 
 import Entities.Event;
 
@@ -54,7 +54,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
     public void onBindViewHolder(myViewHolder holder, int position) {
         Event current = events.get(position);
         holder.event_name.setText(current.name);
-        holder.event_name.setTag(current.event_id);
+        holder.event_card.setTag(current.event_id);
     }
 
     @Override
@@ -65,11 +65,13 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
     public static class myViewHolder extends RecyclerView.ViewHolder {
 
         TextView event_name;
+        CardView event_card;
 
         public myViewHolder(View itemView) {
             super(itemView);
             event_name= (TextView) itemView.findViewById(R.id.event_name);
-            event_name.setOnClickListener(new View.OnClickListener() {
+            event_card= (CardView) itemView.findViewById(R.id.event_card);
+            event_card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.

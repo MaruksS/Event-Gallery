@@ -113,8 +113,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()){
             case R.id.btn_create :
                 create_event();
+                break;
             case R.id.btn_join:
                 open_join_event();
+                break;
         }
     }
 

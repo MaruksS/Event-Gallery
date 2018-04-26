@@ -13,11 +13,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -26,7 +24,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
@@ -39,23 +36,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
+
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 import Adapters.GalleryAdapter;
 
 import Entities.Photo;
 import Helpers.RandomStringGenerator;
 
-import static android.R.attr.bitmap;
-import static android.media.CamcorderProfile.get;
-import static com.s_maruks.tutinava.eventgallery.R.id.imageView;
 
 
 public class ViewEvent extends AppCompatActivity implements View.OnClickListener {
@@ -71,6 +64,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
 
     //Helepers
     private static RandomStringGenerator stringGenerator;
+
 
     //RecyclerView - related
     private GalleryAdapter adapter;
@@ -173,6 +167,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                     uploadTask.addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception exception) {
+
                         }
                     }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
@@ -312,13 +307,12 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
 
     private void display_photos(){
         adapter = new GalleryAdapter(ViewEvent.this, get_photos());
-
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
                 adapter.setOnRecyclerViewItemClickListener(new GalleryAdapter.OnRecyclerViewItemClickListener() {
                     @Override
-                    public void onItemClicked(CharSequence text) {
+                    public void onItemClicked() {
                         Log.d("message","gg");
                     }
                 });
@@ -326,7 +320,7 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
                 mRecyclerView.setAdapter(adapter);
                 download_photos_to_memory();
             }
-        }, 2500);   //1.5 seconds
+        }, 2500);   //2.5 seconds
     }
 
     public void openCamera(){
@@ -391,4 +385,6 @@ public class ViewEvent extends AppCompatActivity implements View.OnClickListener
         String reportDate = df.format(date);
         return reportDate;
     }
+
+
 }

@@ -59,11 +59,11 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
         FBEvent current = events.get(position);
         String name = current.name;
         String date = current.start_time;
-        photoRef= current.image_url;
-        Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
-                .load(photoRef)
-                .asBitmap()
-                .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
+        //photoRef= current.image_url;
+        //Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
+        //        .load(photoRef)
+        //        .asBitmap()
+        //        .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
         EventsViewHolder.event_date.setText(date);
         EventsViewHolder.event_name.setText(name);
         EventsViewHolder.event_layout.setTag(current.event_id);
@@ -91,7 +91,7 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.
-                    mListener.onItemClicked((CharSequence) v.getTag());
+                   // mListener.onItemClicked((CharSequence) v.getTag());
                 }
             });
         }

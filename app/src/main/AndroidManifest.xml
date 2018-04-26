@@ -15,10 +15,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <provider
-        android:name="com.facebook.FacebookContentProvider"
-        android:authorities="com.facebook.app.FacebookContentProvider1974697982741584"
-        android:exported="true" />
 
     <application
         android:allowBackup="true"
@@ -53,6 +49,11 @@
         <activity android:name=".InviteActivity" />
         <activity android:name=".JoinEventActivity" />
         <activity android:name=".EditEventActivity"></activity>
+
+        <provider
+            android:name="com.facebook.FacebookContentProvider"
+            android:authorities="com.facebook.app.FacebookContentProvider1974697982741584"
+            android:exported="true" />
     </application>
 
 </manifest>

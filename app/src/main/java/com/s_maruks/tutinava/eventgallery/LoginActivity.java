@@ -35,26 +35,26 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
-    //Firebase references
+    // Firebase references
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseDatabase database;
     private DatabaseReference mDatabase;
     private CallbackManager callbackManager;
 
-    //JSON data variables
+    // JSON data variables
     private JSONObject object;
 
-    //final variables
+    // final variables
     private final String TAG = "FacebookLogin";
     private final int password_length = 6;
 
-    //Other data types
+    // Other data types
     private String user_id;
     private String name;
     private String email;
 
-    //Visual elements
+    // Visual elements
     private LoginButton loginButton;
     private EditText email_input;
     private EditText password_input;

@@ -35,7 +35,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.GalleryV
 
     // Define the listener interface
     public interface OnRecyclerViewItemClickListener {
-        void onItemClicked(CharSequence text);
+        void onItemClicked();
     }
 
     // Define the method that allows the parent activity or fragment to define the listener.
@@ -105,7 +105,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.GalleryV
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.
-                    mListener.onItemClicked((CharSequence) v.getTag());
+                    mListener.onItemClicked();
                 }
             });
         }
