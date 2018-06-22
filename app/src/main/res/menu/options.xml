@@ -6,8 +6,8 @@
         android:showAsAction="ifRoom"
         android:title="menu">
         <item
-            android:id="@+id/Profile"
-            android:title="Profile" />
+            android:id="@+id/Join"
+            android:title="Join Event" />
         <item
             android:id="@+id/LogOut"
             android:title="Log out" />

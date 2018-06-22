@@ -18,10 +18,10 @@ public class FBEvent {
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
-    public FBEvent(String name, String description, String start_time,String event_id, String image_url) {
+    public FBEvent(String name, String start_time,String event_id, String image_url) {
         this.name = name;
         this.event_id= event_id;
-        this.description= description;
+        //this.description= description;
         this.start_time=start_time;
         this.image_url= image_url;
     }

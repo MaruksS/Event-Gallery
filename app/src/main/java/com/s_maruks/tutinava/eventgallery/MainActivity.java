@@ -3,6 +3,7 @@ package com.s_maruks.tutinava.eventgallery;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //Other data types
     private String creator;
+    private FloatingActionButton Fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +57,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRecyclerView = (RecyclerView) findViewById(R.id.rw_main);
         mLinearLayoutManager = new LinearLayoutManager(this);
 
-        findViewById(R.id.btn_create).setOnClickListener(this);
-        findViewById(R.id.btn_join).setOnClickListener(this);
-
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -65,12 +64,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (user != null) {
                     creator = mAuth.getCurrentUser().getUid().toString();
                     user_events= mDatabase.child("users").child(creator).child("Attending");
-                    display_data();
+                    get_events();
                 } else {
                     open_login_screen();
                 }
             }
         };
+
+        Fab = (FloatingActionButton) findViewById(R.id.fab);
+        Fab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                create_event();
+            }
+        });
     }
 
     @Override
@@ -84,8 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.Profile:
-                open_profile();
+            case R.id.Join:
+                open_join_event();
                 return true;
             case R.id.LogOut:
                 signOut();
@@ -114,9 +120,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_create :
                 create_event();
                 break;
-            case R.id.btn_join:
-                open_join_event();
-                break;
         }
     }
 
@@ -125,22 +128,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(new_activity);
     }
 
-    private void display_data(){
-        adapter = new MainAdapter(MainActivity.this, get_events());
+    private void display_data(List<Event> events){
+        adapter = new MainAdapter(MainActivity.this, events);
         adapter.setOnRecyclerViewItemClickListener(new MainAdapter.OnRecyclerViewItemClickListener() {
             @Override
             public void onItemClicked(CharSequence text) {
                 open_event(text.toString());
             }
         });
-        //TODO: replace handler with better way of waiting till receive all data
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                mRecyclerView.setLayoutManager(mLinearLayoutManager);
-                mRecyclerView.setAdapter(adapter);
-            }
-        }, 1500);   //1.5 seconds
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(adapter);
     }
 
     private void signOut() {
@@ -173,7 +170,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(new_activity);
     }
 
-    private List<Event> get_events(){
+
+    private void get_events(){
         final List<Event> displayed_events= new ArrayList<>();
         try {
             //getting all events id from users.user_id.attending
@@ -190,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Event event = dataSnapshot.getValue(Event.class);
                                 displayed_events.add(event);
+                                display_data(displayed_events);
                             }
                             @Override
                             public void onCancelled(DatabaseError error) {
@@ -208,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         catch (Exception e){
         }
-        return displayed_events;
     }
 
 }

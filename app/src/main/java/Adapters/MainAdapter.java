@@ -7,10 +7,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import Entities.Event;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.s_maruks.tutinava.eventgallery.R;
 
 import java.util.Collections;
@@ -53,6 +58,26 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
     @Override
     public void onBindViewHolder(myViewHolder holder, int position) {
         Event current = events.get(position);
+        Context context = holder.cover_image.getContext();
+
+        FirebaseStorage mStorage = FirebaseStorage.getInstance();
+        StorageReference mStorageRef = mStorage.getReference();
+
+
+        if (current.cover_photo.startsWith("not_set")){
+            Glide.with(context)
+                    .load(R.drawable.ic_photo_placeholder)
+                    .into(holder.cover_image);
+        }else {
+            StorageReference photoRef = mStorageRef.child("events").child(current.event_id).child(current.cover_photo);
+            Glide.with(context)
+                    .using(new FirebaseImageLoader())
+                    .load(photoRef)
+                    .asBitmap()
+                    .centerCrop()
+                    .into(holder.cover_image);
+        }
+
         holder.event_name.setText(current.name);
         holder.event_card.setTag(current.event_id);
     }
@@ -66,11 +91,13 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.myViewHolder> 
 
         TextView event_name;
         CardView event_card;
+        ImageView cover_image;
 
         public myViewHolder(View itemView) {
             super(itemView);
-            event_name= (TextView) itemView.findViewById(R.id.event_name);
-            event_card= (CardView) itemView.findViewById(R.id.event_card);
+            event_name = (TextView) itemView.findViewById(R.id.event_name);
+            event_card = (CardView) itemView.findViewById(R.id.event_card);
+            cover_image = (ImageView) itemView.findViewById(R.id.cover_image);
             event_card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

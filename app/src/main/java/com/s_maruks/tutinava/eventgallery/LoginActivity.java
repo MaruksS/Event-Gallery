@@ -78,10 +78,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.btn_login).setOnClickListener(this);
 
         try{
+
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
-                    LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("user_events","email"));
+                    LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this,
+                            Arrays.asList("user_events","email"));
                     handleFacebookAccessToken(loginResult.getAccessToken());
                 }
 

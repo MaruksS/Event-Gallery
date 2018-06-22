@@ -1,6 +1,7 @@
 package com.s_maruks.tutinava.eventgallery;
 
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -10,10 +11,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
@@ -35,6 +40,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import Adapters.MainAdapter;
 import Adapters.UpcomingEventsAdapter;
 import Entities.Event;
 import Entities.FBEvent;
@@ -59,8 +65,10 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     //RecyclerView - related
     private UpcomingEventsAdapter adapter;
+    private MainAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
+    private LinearLayoutManager mLinearLayoutManager_FB;
 
     //Other data types
     private String stringDate;
@@ -73,6 +81,8 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private SimpleDateFormat displayDate;
     private SimpleDateFormat simpleDate;
     private AccessToken token;
+    private int fb_event_count;
+    private int height;
 
     //final variables
     private final String FB_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss+SSSS";
@@ -83,6 +93,11 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     private EditText event_name_input;
     private EditText event_description_input;
     private TextView event_date_field;
+    private TextView event_indicator;
+    private TextView event_alert;
+    private ImageView disable_event;
+    private ImageView fb_event_image;
+    private RecyclerView rec_view;
     private Toast currentToast;
 
     @Override
@@ -93,6 +108,12 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         event_name_input = (EditText) findViewById(R.id.txt_name);
         event_description_input= (EditText) findViewById(R.id.txt_desc);
         event_date_field= (TextView)findViewById(R.id.tw_date);
+        event_indicator = (TextView)findViewById(R.id.fb_event_tfield);
+        disable_event = (ImageView)findViewById(R.id.fb_event_close);
+        disable_event.setOnClickListener(this);
+        fb_event_image = (ImageView)findViewById(R.id.fb_event_image);
+        rec_view=(RecyclerView) findViewById(R.id.rec_view);
+
         findViewById(R.id.btn_create).setOnClickListener(this);
         findViewById(R.id.btn_fb).setOnClickListener(this);
         findViewById(R.id.btn_date).setOnClickListener(this);
@@ -118,6 +139,7 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         layoutAnimationManager= new LayoutExpander();
         mRecyclerView = (RecyclerView) findViewById(R.id.rw_fb);
         mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager_FB = new LinearLayoutManager(this);
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -157,11 +179,16 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
             case R.id.btn_fb:
                 launch_animation();
                 break;
+            case R.id.fb_event_close:
+                disable_fb_event();
+                break;
         }
     }
 
     public void get_upcoming_events(){
-        String path =  "/me/events?since=18.04.2018";
+        height=0;
+        fb_event_count=0;
+        String path =  "/me/events";
         token =AccessToken.getCurrentAccessToken();
         new GraphRequest(token, path, null, HttpMethod.GET,
                 new GraphRequest.Callback() {
@@ -173,12 +200,17 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
                                 FBEvent fbEvent= new FBEvent();
                                 JSONObject upcoming_event = upcoming_events.getJSONObject(i);
                                 fbEvent.start_time = upcoming_event.getString("start_time");
-                                fbEvent.description = upcoming_event.getString("description");
+                                //fbEvent.description = upcoming_event.getString("description");
                                 fbEvent.name = upcoming_event.getString("name");
                                 fbEvent.event_id = upcoming_event.getString("id");
                                 fb_events.add(fbEvent);
+                                fb_event_count++;
+                                if (fb_event_count<=3){
+                                    height+=150;
+                                }
                             }
                             get_display_picture();
+                            open_animation();
                         }
                         catch(Exception e){
                         }
@@ -189,38 +221,44 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
 
     private void create_event(){
         final String event_name = event_name_input.getText().toString();
+
         final String event_id = event_name.replace(' ', '-').toLowerCase();
         final String event_description = event_description_input.getText().toString();
         final String fb_event_id;
+        final String cover_photo = "not_set";
         if (selected_event != null){
             fb_event_id=selected_event.event_id;
         }
         else fb_event_id=null;
 
-        DatabaseReference event = all_events.child(event_id);
-        event.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.hasChildren()==true){
-                    Log.d("message","exists");
-                    create_toast("Event with this name already exists");
+        if(event_name.length()<4){
+            create_toast("Event name is too short");
+        }else {
+            DatabaseReference event = all_events.child(event_id);
+            event.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChildren()==true){
+                        Log.d("message","exists");
+                        create_toast("Event with this name already exists");
+                    }
+                    else{
+                        Log.d("message","OK");
+                        List<User> participants = new ArrayList<>();
+                        Event event = new Event(event_name,event_description,creator,event_id,participants,fb_event_id, cover_photo);
+                        user_events.child(event_id).setValue(true);
+                        mDatabase.child("events").child(event_id).setValue(event);
+                        open_invite_activity(event_id,event_name);
+                    }
                 }
-                else{
-                    Log.d("message","OK");
-                    List<User> participants = new ArrayList<>();
-                    Event event = new Event(event_name,event_description,creator,event_id,participants,fb_event_id);
-                    user_events.child(event_id).setValue(true);
-                    mDatabase.child("events").child(event_id).setValue(event);
-                    open_invite_activity(event_id,event_name);
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w("", "Failed to read value.", error.toException());
                 }
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("", "Failed to read value.", error.toException());
-            }
 
-        });
+            });
+        }
     }
 
     private void display_data(){
@@ -237,30 +275,35 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     private void get_display_picture(){
-        token =AccessToken.getCurrentAccessToken();
+        token = AccessToken.getCurrentAccessToken();
         for (int i = 0; i < fb_events.size(); i++) {
             final int finalI = i;
-            fb_events.get(finalI).image_url = "http://snappyhouse.com.sg/templates/bootstrap2-responsive/assets/images/v2/featured_placeholder-400x300.png";
-            display_data();
-           /* String path = "/" + fb_events.get(i).event_id + "?fields=cover";
+            //fb_events.get(finalI).image_url = "http://snappyhouse.com.sg/templates/bootstrap2-responsive/assets/images/v2/featured_placeholder-400x300.png";
+            //display_data();
+            String path = "/" + fb_events.get(i).event_id + "?fields=cover";
             new GraphRequest(
                     token,
                     path,
-                    null,http://snappyhouse.com.sg/templates/bootstrap2-responsive/assets/images/v2/featured_placeholder-400x300.png
+                    null,
                     HttpMethod.GET,
                     new GraphRequest.Callback() {
                         public void onCompleted(GraphResponse response) {
                             try {
                                 object = response.getJSONObject();
-                                JSONObject data_object = object.getJSONObject("data");
-
+                                if (!object.has("cover")){
+                                    fb_events.get(finalI).image_url = "placeholder";
+                                }
+                                else{
+                                    JSONObject data_object = object.getJSONObject("cover");
+                                    fb_events.get(finalI).image_url = data_object.getString("source");
+                                }
+                                display_data();
                             }
                             catch(Exception e){
                             }
                         }
                     }
             ).executeAsync();
-        }*/
         }
     }
 
@@ -280,25 +323,59 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
     }
 
     private void create_from_event(String event_id){
+        rec_view.setVisibility(View.INVISIBLE);
 
         for (int i=0;i<fb_events.size();i++){
             if (fb_events.get(i).event_id==event_id){
                 selected_event=fb_events.get(i);
+
                 event_name_input.setText(selected_event.name);
+                event_name_input.setEnabled(false);
+
                 event_description_input.setText(selected_event.description);
                 Date event_date = parseDate(selected_event.start_time);
                 String display_date = displayDate.format(event_date);
                 event_date_field.setText(display_date);
+                findViewById(R.id.btn_date).setEnabled(false);
+                disable_event.setVisibility(View.VISIBLE);
+                event_indicator.setText(selected_event.name);
+                get_event();
 
+                String photoRef= selected_event.image_url;
+                if (photoRef=="placeholder"){
+                    Glide.with(this)
+                            .load(R.drawable.ic_photo_placeholder)
+                            .into(fb_event_image);
+                }
+                else{
+                    Glide.with(this)
+                            .load(photoRef)
+                            .asBitmap()
+                            .into(fb_event_image);
+                }
                 launch_animation();
             }
         }
 
     }
 
+    private void disable_fb_event(){
+        rec_view.setVisibility(View.INVISIBLE);
+        selected_event=null;
+        event_name_input.setText("");
+        event_name_input.setEnabled(true);
+
+        findViewById(R.id.btn_date).setEnabled(true);
+        Glide.with(this)
+                .load(R.drawable.ic_photo_placeholder)
+                .into(fb_event_image);
+        event_indicator.setText("No Facebook Event selected");
+        disable_event.setVisibility(View.INVISIBLE);
+    }
+
     private void launch_animation(){
         if (isVisible) {
-            layoutAnimationManager.expand(mRecyclerView, 1000, -600);
+            layoutAnimationManager.expand(mRecyclerView, 1000, -height);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
@@ -308,10 +385,14 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
             isVisible = false;
         } else if (!isVisible){
             if (!isLoaded) get_upcoming_events();
-            layoutAnimationManager.expand(mRecyclerView, 1000, 600);
-            mRecyclerView.setVisibility(View.VISIBLE);
-            isVisible = true;
+            else open_animation();
         }
+    }
+
+    private void open_animation(){
+        layoutAnimationManager.expand(mRecyclerView, 1000, height);
+        mRecyclerView.setVisibility(View.VISIBLE);
+        isVisible = true;
     }
 
     private void showDatePickerDialog(View v) {
@@ -334,5 +415,54 @@ public class CreateEvent extends AppCompatActivity  implements View.OnClickListe
         new_activity.putExtra("event_id",event_id);
         new_activity.putExtra("event_name",event_name);
         startActivity(new_activity);
+    }
+
+    private void open_event(String event){
+        Intent new_activity = new Intent(CreateEvent.this, ViewEvent.class);
+        new_activity.putExtra("event_id",event);
+        startActivity(new_activity);
+    }
+
+    private void get_event(){
+        try {
+            all_events.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
+                        Event event = messageSnapshot.getValue(Event.class);
+                        if(event.fb_event_id!=null){
+                            if (event.fb_event_id.trim().equals(selected_event.event_id.trim())){
+                                existing_event_display(event);
+                                break;
+                            }
+                        }
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    // Failed to read value
+                    Log.w("", "Failed to read value.", error.toException());
+                }
+            });
+        }
+        catch (Exception e){
+        }
+    }
+
+    private void existing_event_display(Event event){
+        List<Event> list= new ArrayList<>();
+        list.add(event);
+
+        mAdapter = new MainAdapter(CreateEvent.this, list);
+        mAdapter.setOnRecyclerViewItemClickListener(new MainAdapter.OnRecyclerViewItemClickListener() {
+            @Override
+            public void onItemClicked(CharSequence text) {
+                open_event(text.toString());
+            }
+        });
+        rec_view.setLayoutManager(mLinearLayoutManager_FB);
+        rec_view.setAdapter(mAdapter);
+
+        rec_view.setVisibility(View.VISIBLE);
     }
 }

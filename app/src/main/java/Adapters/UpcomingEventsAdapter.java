@@ -59,11 +59,18 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
         FBEvent current = events.get(position);
         String name = current.name;
         String date = current.start_time;
-        //photoRef= current.image_url;
-        //Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
-        //        .load(photoRef)
-        //        .asBitmap()
-        //        .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
+        photoRef= current.image_url;
+        if (photoRef=="placeholder"){
+            Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
+                    .load(R.drawable.ic_photo_placeholder)
+                    .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
+        }
+        else{
+            Glide.with(UpcomingEventsAdapter.EventsViewHolder.display_image.getContext())
+                    .load(photoRef)
+                    .asBitmap()
+                    .into(UpcomingEventsAdapter.EventsViewHolder.display_image);
+        }
         EventsViewHolder.event_date.setText(date);
         EventsViewHolder.event_name.setText(name);
         EventsViewHolder.event_layout.setTag(current.event_id);
@@ -75,11 +82,11 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
     }
 
     public static class EventsViewHolder extends RecyclerView.ViewHolder{
-        static ImageView display_image;
-        static TextView event_name;
-        static TextView event_date;
-        static RelativeLayout event_layout;
-        public EventsViewHolder(View itemView) {
+        private static ImageView display_image;
+        private static TextView event_name;
+        private static TextView event_date;
+        private static RelativeLayout event_layout;
+        private EventsViewHolder(View itemView) {
             super(itemView);
             display_image = (ImageView) itemView.findViewById(iw_image);
             event_name = (TextView)itemView.findViewById(R.id.txt_name);
@@ -91,7 +98,7 @@ public class UpcomingEventsAdapter extends RecyclerView.Adapter<UpcomingEventsAd
                 @Override
                 public void onClick(View v) {
                     // send the text to the listener, i.e Activity.
-                   // mListener.onItemClicked((CharSequence) v.getTag());
+                    mListener.onItemClicked((CharSequence) v.getTag());
                 }
             });
         }

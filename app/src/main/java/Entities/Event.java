@@ -14,18 +14,20 @@ public class Event {
     public List<User> participants;
     public String fb_event_id;
     public String description;
+    public String cover_photo;
 
     public Event() {
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
-    public Event(String name,String description, String creator_id,String event_id, List<User> participants,String fb_event_id) {
+    public Event(String name,String description, String creator_id,String event_id, List<User> participants,String fb_event_id, String cover_photo) {
         this.name = name;
         this.description = description;
         this.creator_id=creator_id;
         this.event_id= event_id;
         this.participants=participants;
         this.fb_event_id=fb_event_id;
+        this.cover_photo=cover_photo;
     }
 
 }
